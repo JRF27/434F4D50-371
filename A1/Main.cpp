@@ -89,6 +89,18 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	}
 }
 
+/**
+	This is called whenever the window has been resized via GLFW.
+
+	Source: 
+*/
+void window_resize_callback(GLFWwindow *_window, int width, int height)
+{
+	std::cout << "Resized! " << width << "x" << height << "." << std::endl;
+	glViewport(0, 0, width, height);
+	projection_matrix = glm::perspective(45.0f, (GLfloat)width / (GLfloat)height, 0.0f, 100.0f);
+}
+
 int main()
 {
 	std::cout << "Starting GLFW context, OpenGL 3.3" << std::endl;
@@ -111,6 +123,7 @@ int main()
 
 	// Register callback functions
 	glfwSetKeyCallback(window, key_callback);
+	glfwSetWindowSizeCallback(window, window_resize_callback);
 
 	// Set this to true so GLEW knows to use a modern approach to retrieving function pointers and extensions
 	glewExperimental = GL_TRUE;
