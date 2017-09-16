@@ -9,7 +9,8 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{A8DB44C8-E361-4996-8208-3414F4059276}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>COMP371_Lab3</RootNamespace>
+    <RootNamespace>
+    </RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
     <ProjectName>A1</ProjectName>
   </PropertyGroup>

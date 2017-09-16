@@ -1,6 +1,3 @@
-//example skeleton code
-//modified from http://learnopengl.com/
-
 #include "stdafx.h"
 
 #include "..\glew\glew.h"	// include GL Extension Wrangler
@@ -12,12 +9,13 @@
 #include "glm.hpp"
 #include "gtc/matrix_transform.hpp"
 #include "gtc/type_ptr.hpp"
+
 #include "objloader.hpp"  //include the object loader
 
 using namespace std;
 
 // Window dimensions
-const GLuint WIDTH = 800, HEIGHT = 600;
+const GLuint WIDTH = 800, HEIGHT = 800;
 
 glm::vec3 camera_position;
 glm::vec3 triangle_scale;
@@ -28,14 +26,19 @@ const glm::vec3 center(0.0f, 0.0f, 0.0f);
 const glm::vec3 up(0.0f, 1.0f, 0.0f);
 const glm::vec3 eye(0.0f, 0.0f, 3.0f);
 
-
-// Is called whenever a key is pressed/released via GLFW
+/**
+	This is called whenever a key is pressed/released via GLFW.
+*/
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
-	std::cout << key << std::endl;	
+	switch (key)
+	{
+		default:
+			std::cout << "Unimplemented" << key << std::endl;
+			break;
+	}
 }
 
-// The MAIN function, from here we start the application and run the game loop
 int main()
 {
 	std::cout << "Starting GLFW context, OpenGL 3.3" << std::endl;
@@ -47,7 +50,7 @@ int main()
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	// Create a GLFWwindow object that we can use for GLFW's functions
-	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Load one cube", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "A1", nullptr, nullptr);
 	if (window == nullptr)
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;
@@ -55,7 +58,8 @@ int main()
 		return -1;
 	}
 	glfwMakeContextCurrent(window);
-	// Set the required callback functions
+
+	// Register callback functions
 	glfwSetKeyCallback(window, key_callback);
 
 	// Set this to true so GLEW knows to use a modern approach to retrieving function pointers and extensions
