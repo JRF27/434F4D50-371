@@ -1,7 +1,7 @@
 #include "stdafx.h"
 
-#include "..\glew\glew.h"	// include GL Extension Wrangler
-#include "..\glfw\glfw3.h"	// include GLFW helper library
+#include "..\glew\glew.h"					// include GL Extension Wrangler
+#include "..\glfw\glfw3.h"					// include GLFW helper library
 #include <stdio.h>
 #include <iostream>
 #include <string>
@@ -10,7 +10,7 @@
 #include "gtc/matrix_transform.hpp"
 #include "gtc/type_ptr.hpp"
 
-#include "objloader.hpp"  //include the object loader
+#include "objloader.hpp"					//include the object loader
 
 using namespace std;
 
@@ -28,13 +28,63 @@ const glm::vec3 eye(0.0f, 0.0f, 3.0f);
 
 /**
 	This is called whenever a key is pressed/released via GLFW.
+
+	Source: https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glPolygonMode.xhtml
 */
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
 	switch (key)
 	{
+		case GLFW_KEY_SPACE:
+			std::cout << "Re-position player at random." << std::endl;
+			break;
+		case GLFW_KEY_U:
+			std::cout << "Scale-up." << std::endl;
+			break;
+		case GLFW_KEY_J:
+			std::cout << "Down-up." << std::endl;
+			break;
+		case GLFW_KEY_A:
+			std::cout << "Move Left." << std::endl;
+			break;
+		case GLFW_KEY_D:
+			std::cout << "Move Right." << std::endl;
+			break;
+		case GLFW_KEY_W:
+			std::cout << "Move Up." << std::endl;
+			break;
+		case GLFW_KEY_S:
+			std::cout << "Move Down." << std::endl;
+			break;
+		case GLFW_KEY_LEFT:
+			std::cout << "Arrow Left." << std::endl;
+			break;
+		case GLFW_KEY_RIGHT:
+			std::cout << "Arrow Right." << std::endl;
+			break;
+		case GLFW_KEY_UP:
+			std::cout << "Arrow Up." << std::endl;
+			break;
+		case GLFW_KEY_DOWN:
+			std::cout << "Arrow Dowm." << std::endl;
+			break;
+		case GLFW_KEY_HOME:
+			std::cout << "Home." << std::endl;
+			break;
+		case GLFW_KEY_P:
+			std::cout << "Rendered as Points." << std::endl;
+			glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+			break;
+		case GLFW_KEY_L:
+			std::cout << "Rendered as Lines." << std::endl;
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			break;
+		case GLFW_KEY_T:
+			std::cout << "Rendered as Triangles." << std::endl;
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			break;
 		default:
-			std::cout << "Unimplemented" << key << std::endl;
+			std::cout << "Unimplemented key #" << key << "pressed." << std::endl;
 			break;
 	}
 }
