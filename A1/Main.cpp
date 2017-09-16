@@ -17,6 +17,8 @@ using namespace std;
 // Window dimensions
 const GLuint WIDTH = 800, HEIGHT = 800;
 
+const GLfloat SCALE_FACTOR = 0.05f;
+
 glm::vec3 camera_position;
 glm::vec3 triangle_scale;
 glm::mat4 projection_matrix;
@@ -29,20 +31,25 @@ const glm::vec3 eye(0.0f, 0.0f, 3.0f);
 /**
 	This is called whenever a key is pressed/released via GLFW.
 
-	Source: https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glPolygonMode.xhtml
+	Read: http://www.glfw.org/docs/latest/input_guide.html
+	Read: https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glPolygonMode.xhtml
 */
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
-	switch (key)
+	if (action == GLFW_PRESS)
 	{
+		switch (key)
+		{
 		case GLFW_KEY_SPACE:
 			std::cout << "Re-position player at random." << std::endl;
 			break;
 		case GLFW_KEY_U:
 			std::cout << "Scale-up." << std::endl;
+			triangle_scale += triangle_scale * SCALE_FACTOR;
 			break;
 		case GLFW_KEY_J:
-			std::cout << "Down-up." << std::endl;
+			std::cout << "Scale-down." << std::endl;
+			triangle_scale -= triangle_scale * SCALE_FACTOR;
 			break;
 		case GLFW_KEY_A:
 			std::cout << "Move Left." << std::endl;
@@ -86,6 +93,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		default:
 			std::cout << "Unimplemented key #" << key << "pressed." << std::endl;
 			break;
+		}
 	}
 }
 
