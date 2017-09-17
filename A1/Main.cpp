@@ -172,8 +172,18 @@ int init()
 	glfwSwapInterval(1);
 
 	// Z-Buffer
+	/*
+		GL_ALWAYS	The depth test always passes.
+		GL_NEVER	The depth test never passes.
+		GL_LESS		Passes if the fragment's depth value is less than the stored depth value.
+		GL_EQUAL	Passes if the fragment's depth value is equal to the stored depth value.
+		GL_LEQUAL	Passes if the fragment's depth value is less than or equal to the stored depth value.
+		GL_GREATER	Passes if the fragment's depth value is greater than the stored depth value.
+		GL_NOTEQUAL	Passes if the fragment's depth value is not equal to the stored depth value.
+		GL_GEQUAL	Passes if the fragment's depth value is greater than or equal to the stored depth value.
+	*/
 	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
+	glDepthFunc(GL_LEQUAL);
 
 	// Set this to true so GLEW knows to use a modern approach to retrieving function pointers and extensions
 	glewExperimental = GL_TRUE;
