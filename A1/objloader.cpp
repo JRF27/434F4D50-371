@@ -10,6 +10,7 @@
 
 bool loadOBJ(
 	const char * path,
+	bool hasUVs,
 	std::vector<glm::vec3> & out_vertices,
 	std::vector<glm::vec3> & out_normals,
 	std::vector<glm::vec2> & out_uvs) {
@@ -55,11 +56,23 @@ bool loadOBJ(
 		else if (strcmp(lineHeader, "f") == 0) {
 			std::string vertex1, vertex2, vertex3;
 			unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
-			int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2]);
-			if (matches != 9) {
-				printf("File can't be read by our simple parser :-( Try exporting with other options\n");
-				return false;
+			if (hasUVs)
+			{
+				int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2]);
+				if (matches != 9) {
+					printf("File can't be read by our simple parser :-( Try exporting with other options\n");
+					return false;
+				}
 			}
+			else
+			{
+				int matches = fscanf(file, "%d//%d %d//%d %d//%d\n", &vertexIndex[0], &normalIndex[0], &vertexIndex[1], &normalIndex[1], &vertexIndex[2], &normalIndex[2]);
+				if (matches != 6) {
+					printf("File can't be read by our simple parser :-( Try exporting with other options\n");
+					return false;
+				}
+			}
+			
 			vertexIndices.push_back(vertexIndex[0]);
 			vertexIndices.push_back(vertexIndex[1]);
 			vertexIndices.push_back(vertexIndex[2]);
@@ -88,14 +101,17 @@ bool loadOBJ(
 
 		// Get the attributes thanks to the index
 		glm::vec3 vertex = temp_vertices[vertexIndex - 1];
-		glm::vec2 uv = temp_uvs[uvIndex - 1];
 		glm::vec3 normal = temp_normals[normalIndex - 1];
 
 		// Put the attributes in buffers
 		out_vertices.push_back(vertex);
-		out_uvs.push_back(uv);
 		out_normals.push_back(normal);
 
+		if (hasUVs)
+		{
+			glm::vec2 uv = temp_uvs[uvIndex - 1];
+			out_uvs.push_back(uv);
+		}
 	}
 
 	return true;
