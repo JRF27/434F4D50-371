@@ -14,19 +14,21 @@
 
 using namespace std;
 
-// Window dimensions
+// Constants
 const GLuint WIDTH = 800, HEIGHT = 800;
-
 const GLfloat SCALE_FACTOR = 0.05f;
-
-glm::vec3 camera_position;
-glm::vec3 triangle_scale;
-glm::mat4 projection_matrix;
 
 // Constant vectors
 const glm::vec3 center(0.0f, 0.0f, 0.0f);
 const glm::vec3 up(0.0f, 1.0f, 0.0f);
 const glm::vec3 eye(0.0f, 0.0f, 3.0f);
+
+// Globals
+glm::vec3 camera_position;
+glm::vec3 triangle_scale;
+glm::mat4 projection_matrix;
+
+GLFWwindow* window;
 
 /**
 	This is called whenever a key is pressed/released via GLFW.
@@ -126,24 +128,33 @@ void window_resize_callback(GLFWwindow *_window, int width, int height)
 	projection_matrix = glm::perspective(45.0f, (GLfloat)width / (GLfloat)height, 0.0f, 100.0f);
 }
 
-bool init()
-{
+/**
+	This is called whenever there is an error via GLFW.
 
-	return true;
+	Source: Lecture 03
+*/
+void error_callback(int error, const char* description)
+{
+	fputs(description, stderr);
 }
 
-int main()
+/**
+	Initialization routine.
+*/
+int init()
 {
 	std::cout << "Starting GLFW context, OpenGL 3.3" << std::endl;
+
 	// Init GLFW
 	glfwInit();
+
 	// Set all the required options for GLFW
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	// Create a GLFWwindow object that we can use for GLFW's functions
-	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "A1", nullptr, nullptr);
+	window = glfwCreateWindow(WIDTH, HEIGHT, "A1", nullptr, nullptr);
 	if (window == nullptr)
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;
@@ -155,6 +166,14 @@ int main()
 	// Register callback functions
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetWindowSizeCallback(window, window_resize_callback);
+	glfwSetErrorCallback(error_callback);
+
+	// Blocks swapping until monitor has done at least one vertical draw
+	glfwSwapInterval(1);
+
+	// Z-Buffer
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
 
 	// Set this to true so GLEW knows to use a modern approach to retrieving function pointers and extensions
 	glewExperimental = GL_TRUE;
@@ -163,6 +182,16 @@ int main()
 	{
 		std::cout << "Failed to initialize GLEW" << std::endl;
 		return -1;
+	}
+
+	return 1;
+}
+
+int main()
+{
+	if (init() == 1)
+	{
+		std::cout << "Initialization complete!" << std::endl;
 	}
 
 	// Define the viewport dimensions
@@ -254,7 +283,7 @@ int main()
 	std::vector<glm::vec3> vertices;
 	std::vector<glm::vec3> normals;
 	std::vector<glm::vec2> UVs;
-	loadOBJ("teapot.obj", false, vertices, normals, UVs); //read the vertices from the cube.obj file
+	loadOBJ("teapot.obj", false, vertices, normals, UVs); //read the vertices from the .obj file
 
 	GLuint VAO, VBO,EBO;
 	glGenVertexArrays(1, &VAO);
@@ -299,7 +328,7 @@ int main()
 		// Render
 		// Clear the colorbuffer
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
 		glm::mat4 view_matrix;
 		view_matrix = glm::lookAt(eye, center, up);
