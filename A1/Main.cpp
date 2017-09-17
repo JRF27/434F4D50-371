@@ -95,6 +95,23 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			break;
 		}
 	}
+	else if (action == GLFW_REPEAT)
+	{
+		switch (key)
+		{
+		case GLFW_KEY_U:
+			std::cout << "Scale-up." << std::endl;
+			triangle_scale += triangle_scale * SCALE_FACTOR;
+			break;
+		case GLFW_KEY_J:
+			std::cout << "Scale-down." << std::endl;
+			triangle_scale -= triangle_scale * SCALE_FACTOR;
+			break;
+		default:
+			std::cout << "Unimplemented key #" << key << "repeated." << std::endl;
+			break;
+		}
+	}
 }
 
 /**
@@ -107,6 +124,12 @@ void window_resize_callback(GLFWwindow *_window, int width, int height)
 	std::cout << "Resized! " << width << "x" << height << "." << std::endl;
 	glViewport(0, 0, width, height);
 	projection_matrix = glm::perspective(45.0f, (GLfloat)width / (GLfloat)height, 0.0f, 100.0f);
+}
+
+bool init()
+{
+
+	return true;
 }
 
 int main()
