@@ -17,14 +17,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\fragment.shader">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="..\..\vertex.shader">
-      <Filter>Shaders</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <Filter Include="Shaders">
       <UniqueIdentifier>{085da0b6-6cec-4cc3-abdc-51cfcadd2235}</UniqueIdentifier>
     </Filter>
@@ -34,5 +26,13 @@
     <Filter Include="Headers">
       <UniqueIdentifier>{18d35e32-3813-47e0-993c-0ca30583a5a1}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="fragment.shader">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="vertex.shader">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

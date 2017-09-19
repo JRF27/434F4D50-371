@@ -10,7 +10,7 @@
 #include "gtc/matrix_transform.hpp"
 #include "gtc/type_ptr.hpp"
 
-#include "objloader.hpp"					//include the object loader
+#include "objloader.hpp"					// include the object loader
 
 using namespace std;
 
@@ -19,14 +19,17 @@ const GLuint WIDTH = 800, HEIGHT = 800;
 const GLfloat SCALE_FACTOR = 0.05f;
 
 // Constant vectors
-const glm::vec3 center(0.0f, 0.0f, 0.0f);
-const glm::vec3 up(0.0f, 1.0f, 0.0f);
-const glm::vec3 eye(0.0f, 0.0f, 3.0f);
+const glm::vec3 ORIGIN(0.0f, 0.0f, 0.0f);
+const glm::vec3 UP(0.0f, 1.0f, 0.0f);
 
 // Globals
 glm::vec3 camera_position;
 glm::vec3 triangle_scale;
+
+// Recipe: projection_matrix * view_matrix * model_matrix
 glm::mat4 projection_matrix;
+glm::mat4 view_matrix;
+glm::mat4 model_matrix;
 
 GLFWwindow* window;
 
@@ -38,7 +41,7 @@ GLFWwindow* window;
 */
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
-	if (action == GLFW_PRESS)
+	if (action == GLFW_PRESS || action == GLFW_REPEAT)
 	{
 		switch (key)
 		{
@@ -66,19 +69,24 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			std::cout << "Move Down." << std::endl;
 			break;
 		case GLFW_KEY_LEFT:
-			std::cout << "Arrow Left." << std::endl;
+			std::cout << "Rotate world -x." << std::endl;
+			model_matrix *= glm::rotate(glm::mat4(1.0f), SCALE_FACTOR, glm::vec3(1, 0, 0));
 			break;
 		case GLFW_KEY_RIGHT:
-			std::cout << "Arrow Right." << std::endl;
+			std::cout << "Rotate world -x." << std::endl;
+			model_matrix *= glm::rotate(glm::mat4(1.0f), -SCALE_FACTOR, glm::vec3(1, 0, 0));
 			break;
 		case GLFW_KEY_UP:
-			std::cout << "Arrow Up." << std::endl;
+			std::cout << "Rotate world y." << std::endl;
+			model_matrix *= glm::rotate(glm::mat4(1.0f), SCALE_FACTOR, glm::vec3(0, 1, 0));
 			break;
 		case GLFW_KEY_DOWN:
-			std::cout << "Arrow Dowm." << std::endl;
+			std::cout << "Rotate world -y." << std::endl;
+			model_matrix *= glm::rotate(glm::mat4(1.0f), -SCALE_FACTOR, glm::vec3(0, 1, 0));
 			break;
 		case GLFW_KEY_HOME:
-			std::cout << "Home." << std::endl;
+			std::cout << "Reset world rotation." << std::endl;
+			model_matrix = glm::mat4(1.0f);
 			break;
 		case GLFW_KEY_P:
 			std::cout << "Rendered as Points." << std::endl;
@@ -94,23 +102,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			break;
 		default:
 			std::cout << "Unimplemented key #" << key << "pressed." << std::endl;
-			break;
-		}
-	}
-	else if (action == GLFW_REPEAT)
-	{
-		switch (key)
-		{
-		case GLFW_KEY_U:
-			std::cout << "Scale-up." << std::endl;
-			triangle_scale += triangle_scale * SCALE_FACTOR;
-			break;
-		case GLFW_KEY_J:
-			std::cout << "Scale-down." << std::endl;
-			triangle_scale -= triangle_scale * SCALE_FACTOR;
-			break;
-		default:
-			std::cout << "Unimplemented key #" << key << "repeated." << std::endl;
 			break;
 		}
 	}
@@ -204,13 +195,16 @@ int main()
 		std::cout << "Initialization complete!" << std::endl;
 	}
 
-	// Define the viewport dimensions
+	// Define the viewport dimensions and the camera's perspective
 	int width, height;
 	glfwGetFramebufferSize(window, &width, &height);
 
 	glViewport(0, 0, width, height);
+	projection_matrix = glm::perspective(45.0f, (GLfloat) width / (GLfloat) height, 0.0f, 100.0f);
 
-	projection_matrix = glm::perspective(45.0f, (GLfloat)width / (GLfloat)height, 0.0f, 100.0f);
+	/*
+		Start of Shaders
+	*/
 
 	// Build and compile our shader program
 	// Vertex shader
@@ -220,13 +214,15 @@ int main()
 	string VertexShaderCode;
 	std::ifstream VertexShaderStream(vertex_shader_path, ios::in);
 
-	if (VertexShaderStream.is_open()) {
+	if (VertexShaderStream.is_open())
+	{
 		string Line = "";
 		while (getline(VertexShaderStream, Line))
 			VertexShaderCode += "\n" + Line;
 		VertexShaderStream.close();
 	}
-	else {
+	else
+	{
 		printf("Impossible to open %s. Are you in the right directory ?\n", vertex_shader_path.c_str());
 		getchar();
 		exit(-1);
@@ -237,13 +233,15 @@ int main()
 	std::string FragmentShaderCode;
 	std::ifstream FragmentShaderStream(fragment_shader_path, std::ios::in);
 
-	if (FragmentShaderStream.is_open()) {
+	if (FragmentShaderStream.is_open())
+	{
 		std::string Line = "";
 		while (getline(FragmentShaderStream, Line))
 			FragmentShaderCode += "\n" + Line;
 		FragmentShaderStream.close();
 	}
-	else {
+	else
+	{
 		printf("Impossible to open %s. Are you in the right directory?\n", fragment_shader_path.c_str());
 		getchar();
 		exit(-1);
@@ -290,17 +288,26 @@ int main()
 
 	glUseProgram(shaderProgram);
 
+	/*
+		End of Shaders
+	*/
+
+	/*
+		Start of Object Data
+	*/
+
 	std::vector<glm::vec3> vertices;
 	std::vector<glm::vec3> normals;
 	std::vector<glm::vec2> UVs;
 	loadOBJ("teapot.obj", false, vertices, normals, UVs); //read the vertices from the .obj file
 
-	GLuint VAO, VBO,EBO;
+	GLuint VAO, VBO, EBO;
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
 	glGenBuffers(1, &EBO);
 	// Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
-	GLuint vertices_VBO, normals_VBO;
+	GLuint vertices_VBO;
+	//GLuint normals_VBO;
 
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &vertices_VBO);
@@ -313,21 +320,26 @@ int main()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(0);
 
+	/*
 	glGenBuffers(1, &normals_VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, normals_VBO);
 	glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), &normals.front(), GL_STATIC_DRAW);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(1);
+	*/
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	glBindVertexArray(0); // Unbind VAO (it's always a good thing to unbind any buffer/array to prevent strange bugs), remember: do NOT unbind the EBO, keep it bound to this VAO
 
-	triangle_scale = glm::vec3(1.0f);
+	// Set initial values
 
 	GLuint projectionLoc = glGetUniformLocation(shaderProgram, "projection_matrix");
 	GLuint viewMatrixLoc = glGetUniformLocation(shaderProgram, "view_matrix");
 	GLuint transformLoc = glGetUniformLocation(shaderProgram, "model_matrix");
+
+	camera_position = glm::vec3(0.0f, 0.0f, 3.0f);
+	triangle_scale = glm::vec3(1.0f);
 
 	// Game loop
 	while (!glfwWindowShouldClose(window))
@@ -340,10 +352,7 @@ int main()
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-		glm::mat4 view_matrix;
-		view_matrix = glm::lookAt(eye, center, up);
-
-		glm::mat4 model_matrix;
+		view_matrix = glm::lookAt(camera_position, ORIGIN, UP);
 		model_matrix = glm::scale(model_matrix, triangle_scale);
 
 		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(model_matrix));
