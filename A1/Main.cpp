@@ -24,6 +24,7 @@ const glm::vec3 UP(0.0f, 1.0f, 0.0f);
 
 // Globals
 glm::vec3 camera_position;
+glm::vec3 camera_direction;
 glm::vec3 triangle_scale;
 
 // Recipe: projection_matrix * view_matrix * model_matrix
@@ -41,6 +42,8 @@ GLFWwindow* window;
 */
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
+	static bool toggleMouse = false;
+
 	if (action == GLFW_PRESS || action == GLFW_REPEAT)
 	{
 		switch (key)
@@ -100,6 +103,11 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			std::cout << "Rendered as Triangles." << std::endl;
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			break;
+		case GLFW_KEY_ESCAPE:
+			std::cout << "Escape pressed." << std::endl;
+			toggleMouse = !toggleMouse;
+			toggleMouse ? glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL) : glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+			break;
 		default:
 			std::cout << "Unimplemented key #" << key << "pressed." << std::endl;
 			break;
@@ -129,6 +137,16 @@ void error_callback(int error, const char* description)
 	fputs(description, stderr);
 }
 
+/*
+	This is called whenever the mouse has moved its position.
+
+	Source: https://learnopengl.com/#!Getting-started/Camera
+*/
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+
+}
+
 /**
 	Initialization routine.
 */
@@ -154,10 +172,14 @@ int init()
 	}
 	glfwMakeContextCurrent(window);
 
+	// Hide the cursor and capture it.
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
 	// Register callback functions
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetWindowSizeCallback(window, window_resize_callback);
 	glfwSetErrorCallback(error_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
 
 	// Blocks swapping until monitor has done at least one vertical draw
 	glfwSwapInterval(1);
@@ -352,7 +374,7 @@ int main()
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-		view_matrix = glm::lookAt(camera_position, ORIGIN, UP);
+		view_matrix = glm::lookAt(camera_position, camera_direction, UP);
 		model_matrix = glm::scale(model_matrix, triangle_scale);
 
 		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(model_matrix));
