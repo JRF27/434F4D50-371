@@ -32,6 +32,7 @@ glm::mat4 projection_matrix;
 glm::mat4 view_matrix;
 glm::mat4 model_matrix;
 
+bool zoomEnabled = false;
 GLFWwindow* window;
 
 /**
@@ -147,6 +148,23 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 
 }
 
+/*
+
+*/
+void mouse_button_callback(GLFWwindow *_window, int button, int action, int mods)
+{
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+	{
+		std::cout << "Left Mouse pressed." << std::endl;
+		zoomEnabled = true;
+	}
+	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
+	{
+		std::cout << "Left Mouse released." << std::endl;
+		zoomEnabled = false;
+	}
+}
+
 /**
 	Initialization routine.
 */
@@ -180,6 +198,7 @@ int init()
 	glfwSetWindowSizeCallback(window, window_resize_callback);
 	glfwSetErrorCallback(error_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetMouseButtonCallback(window, mouse_button_callback);
 
 	// Blocks swapping until monitor has done at least one vertical draw
 	glfwSwapInterval(1);
