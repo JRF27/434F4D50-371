@@ -337,49 +337,67 @@ int main()
 		Start of Object Data
 	*/
 
+	// Object 1
 	std::vector<glm::vec3> vertices;
 	std::vector<glm::vec3> normals;
 	std::vector<glm::vec2> UVs;
 	loadOBJ("teapot.obj", false, vertices, normals, UVs); //read the vertices from the .obj file
 
-	GLuint VAO, VBO, EBO;
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-	glGenBuffers(1, &EBO);
+	GLuint VAO_teapot;
+	GLuint verticesTeapot_VBO;
+
+	glGenVertexArrays(1, &VAO_teapot);		// Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
+	glGenBuffers(1, &verticesTeapot_VBO);	//
+	
 	// Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
-	GLuint vertices_VBO;
-	//GLuint normals_VBO;
-
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &vertices_VBO);
-
-	// Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
-	glBindVertexArray(VAO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, vertices_VBO);
+	glBindVertexArray(VAO_teapot);
+	glBindBuffer(GL_ARRAY_BUFFER, verticesTeapot_VBO);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices.front(), GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(0);
 
-	/*
-	glGenBuffers(1, &normals_VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, normals_VBO);
-	glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), &normals.front(), GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-	glEnableVertexAttribArray(1);
-	*/
+	glBindBuffer(GL_ARRAY_BUFFER, 0);	// Unbind VBO
+	glBindVertexArray(0);				// Unbind VAO (it's always a good thing to unbind any buffer/array to prevent strange bugs)
 
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	// Object 2
+	GLuint VAO_lines;
+	GLuint verticesLines_VBO;
 
-	glBindVertexArray(0); // Unbind VAO (it's always a good thing to unbind any buffer/array to prevent strange bugs), remember: do NOT unbind the EBO, keep it bound to this VAO
+	std::vector<glm::vec3> points;
+	for (int i = -10; i <= 10; i++)
+	{
+		points.push_back(glm::vec3(i, 0, 10));
+		points.push_back(glm::vec3(i, 0, -10));
+		points.push_back(glm::vec3(10, 0, i));
+		points.push_back(glm::vec3(-10, 0, i));
+	}
+
+	points.push_back(glm::vec3(0, 0, 0));
+	points.push_back(glm::vec3(1, 0, 0));
+	points.push_back(glm::vec3(0, 0, 0));
+	points.push_back(glm::vec3(0, 1, 0));
+	points.push_back(glm::vec3(0, 0, 0));
+	points.push_back(glm::vec3(0, 0, 1));
+
+	glGenVertexArrays(1, &VAO_lines);		// Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
+	glGenBuffers(1, &verticesLines_VBO);	//
+
+	// Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
+	glBindVertexArray(VAO_lines);
+	glBindBuffer(GL_ARRAY_BUFFER, verticesLines_VBO);
+	glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(glm::vec3), &points.front(), GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);	// Unbind VBO
+	glBindVertexArray(0);				// Unbind VAO (it's always a good thing to unbind any buffer/array to prevent strange bugs)
 
 	// Set initial values
-
 	GLuint projectionLoc = glGetUniformLocation(shaderProgram, "projection_matrix");
 	GLuint viewMatrixLoc = glGetUniformLocation(shaderProgram, "view_matrix");
 	GLuint transformLoc = glGetUniformLocation(shaderProgram, "model_matrix");
 
-	camera_position = glm::vec3(0.0f, 0.0f, 3.0f);
+	camera_position = glm::vec3(0.0f, 10.0f, 0.0f);
 	triangle_scale = glm::vec3(1.0f);
 
 	// Game loop
@@ -393,15 +411,17 @@ int main()
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-		view_matrix = glm::lookAt(camera_position, camera_direction, UP);
+		view_matrix = glm::lookAt(camera_position, camera_direction, glm::vec3(1.0f, 0.0f, 0.0f));//UP);
 		model_matrix = glm::scale(model_matrix, triangle_scale);
 
 		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(model_matrix));
 		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
 		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
 
-		glBindVertexArray(VAO);
+		glBindVertexArray(VAO_teapot);
 		glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+		glBindVertexArray(VAO_lines);
+		glDrawArrays(GL_LINES, 0, points.size());
 		glBindVertexArray(0);
 
 		// Swap the screen buffers
