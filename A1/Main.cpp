@@ -17,8 +17,6 @@ using namespace std;
 // Constants
 const GLuint WIDTH = 800, HEIGHT = 800;
 const GLfloat SCALE_FACTOR = 0.05f;
-
-// Constant vectors
 const glm::vec3 ORIGIN(0.0f, 0.0f, 0.0f);
 const glm::vec3 UP(0.0f, 1.0f, 0.0f);
 
@@ -32,7 +30,15 @@ glm::mat4 projection_matrix;
 glm::mat4 view_matrix;
 glm::mat4 model_matrix;
 
+// Transforms
 glm::mat4 pacmanTransform;
+glm::mat4 axisTransform;
+
+// Scales
+glm::mat4 pacmanScaleMatrix;
+
+// Rotations
+glm::mat4 worldRotation;
 
 bool zoomEnabled = false;
 GLFWwindow* window;
@@ -80,23 +86,23 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			break;
 		case GLFW_KEY_LEFT:
 			std::cout << "Rotate world -x." << std::endl;
-			model_matrix *= glm::rotate(glm::mat4(1.0f), SCALE_FACTOR, glm::vec3(1, 0, 0));
+			worldRotation *= glm::rotate(glm::mat4(1.0f), SCALE_FACTOR, glm::vec3(1, 0, 0));
 			break;
 		case GLFW_KEY_RIGHT:
 			std::cout << "Rotate world -x." << std::endl;
-			model_matrix *= glm::rotate(glm::mat4(1.0f), -SCALE_FACTOR, glm::vec3(1, 0, 0));
+			worldRotation *= glm::rotate(glm::mat4(1.0f), -SCALE_FACTOR, glm::vec3(1, 0, 0));
 			break;
 		case GLFW_KEY_UP:
 			std::cout << "Rotate world y." << std::endl;
-			model_matrix *= glm::rotate(glm::mat4(1.0f), SCALE_FACTOR, glm::vec3(0, 1, 0));
+			worldRotation *= glm::rotate(glm::mat4(1.0f), SCALE_FACTOR, glm::vec3(0, 1, 0));
 			break;
 		case GLFW_KEY_DOWN:
 			std::cout << "Rotate world -y." << std::endl;
-			model_matrix *= glm::rotate(glm::mat4(1.0f), -SCALE_FACTOR, glm::vec3(0, 1, 0));
+			worldRotation *= glm::rotate(glm::mat4(1.0f), -SCALE_FACTOR, glm::vec3(0, 1, 0));
 			break;
 		case GLFW_KEY_HOME:
 			std::cout << "Reset world rotation." << std::endl;
-			model_matrix = glm::mat4(1.0f);
+			worldRotation = glm::mat4(1.0f);
 			break;
 		case GLFW_KEY_P:
 			std::cout << "Rendered as Points." << std::endl;
@@ -347,31 +353,31 @@ int main()
 	std::vector<glm::vec3> vertices;
 	std::vector<glm::vec3> normals;
 	std::vector<glm::vec2> UVs;
-	loadOBJ("teapot.obj", false, vertices, normals, UVs); //read the vertices from the .obj file
+	loadOBJ("pacman.obj", false, vertices, normals, UVs); //read the vertices from the .obj file
 
-	std::vector<glm::vec3> colorsTeapot;
+	std::vector<glm::vec3> colorsPacman;
 	for (int i = 0; i < vertices.size(); i++)
 	{
-		colorsTeapot.push_back(glm::vec3(1.0, 1.0, 0.0));
+		colorsPacman.push_back(glm::vec3(1.0, 1.0, 0.0));
 	}
 
-	GLuint VAO_teapot;
-	GLuint verticesTeapot_VBO;
-	GLuint colorsTeapot_VBO;
+	GLuint VAO_pacman;
+	GLuint verticesPacman_VBO;
+	GLuint colorsPacman_VBO;
 
-	glGenVertexArrays(1, &VAO_teapot);		// Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
-	glGenBuffers(1, &verticesTeapot_VBO);	//
+	glGenVertexArrays(1, &VAO_pacman);		// Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
+	glGenBuffers(1, &verticesPacman_VBO);	//
 	
 	// Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
-	glBindVertexArray(VAO_teapot);
-	glBindBuffer(GL_ARRAY_BUFFER, verticesTeapot_VBO);
+	glBindVertexArray(VAO_pacman);
+	glBindBuffer(GL_ARRAY_BUFFER, verticesPacman_VBO);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices.front(), GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(0);
 
-	glGenBuffers(1, &colorsTeapot_VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, colorsTeapot_VBO);
-	glBufferData(GL_ARRAY_BUFFER, colorsTeapot.size() * sizeof(glm::vec3), &colorsTeapot.front(), GL_STATIC_DRAW);
+	glGenBuffers(1, &colorsPacman_VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, colorsPacman_VBO);
+	glBufferData(GL_ARRAY_BUFFER, colorsPacman.size() * sizeof(glm::vec3), &colorsPacman.front(), GL_STATIC_DRAW);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(1);
 
@@ -421,6 +427,42 @@ int main()
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(1);
 
+	// Object 3
+	GLuint VAO_axis;
+	GLuint verticesAxis_VBO;
+	GLuint colorsAxis_VBO;
+
+	glGenVertexArrays(1, &VAO_axis);		// Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
+	glGenBuffers(1, &verticesAxis_VBO);	//
+
+	std::vector<glm::vec3> axisPts;
+	axisPts.push_back(glm::vec3(0, 0, 0));
+	axisPts.push_back(glm::vec3(1, 0, 0));
+	axisPts.push_back(glm::vec3(0, 0, 0));
+	axisPts.push_back(glm::vec3(0, 1, 0));
+	axisPts.push_back(glm::vec3(0, 0, 0));
+	axisPts.push_back(glm::vec3(0, 0, 1));
+
+	std::vector<glm::vec3> axisColors;
+	axisColors.push_back(glm::vec3(1.0, 0.0, 0.0));
+	axisColors.push_back(glm::vec3(1.0, 0.0, 0.0));
+	axisColors.push_back(glm::vec3(0.0, 1.0, 0.0));
+	axisColors.push_back(glm::vec3(0.0, 1.0, 0.0));
+	axisColors.push_back(glm::vec3(0.0, 0.0, 1.0));
+	axisColors.push_back(glm::vec3(0.0, 0.0, 1.0));
+
+	glBindVertexArray(VAO_axis);
+	glBindBuffer(GL_ARRAY_BUFFER, verticesAxis_VBO);
+	glBufferData(GL_ARRAY_BUFFER, axisPts.size() * sizeof(glm::vec3), &axisPts.front(), GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(0);
+
+	glGenBuffers(1, &colorsAxis_VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, colorsAxis_VBO);
+	glBufferData(GL_ARRAY_BUFFER, axisColors.size() * sizeof(glm::vec3), &axisColors.front(), GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(1);
+
 	glBindBuffer(GL_ARRAY_BUFFER, 0);	// Unbind VBO
 	glBindVertexArray(0);				// Unbind VAO (it's always a good thing to unbind any buffer/array to prevent strange bugs)
 
@@ -432,7 +474,9 @@ int main()
 	camera_position = glm::vec3(0.0f, 10.0f, 0.0f);
 	triangle_scale = glm::vec3(1.0f);
 
+	axisTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 	pacmanTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+	pacmanScaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.05f, 0.05f, 0.05f));
 
 	// Game loop
 	while (!glfwWindowShouldClose(window))
@@ -452,17 +496,27 @@ int main()
 		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
 		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
 
-		glBindVertexArray(VAO_teapot);
-		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(pacmanTransform));
+		glBindVertexArray(VAO_pacman);
+		model_matrix =  worldRotation * pacmanScaleMatrix * pacmanTransform;
+		model_matrix = glm::scale(model_matrix, triangle_scale);
+		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(model_matrix));
 		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
 		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
 		glDrawArrays(GL_TRIANGLES, 0, vertices.size());
 
 		glBindVertexArray(VAO_lines);
+		model_matrix = axisTransform * worldRotation;
 		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(model_matrix));
 		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
 		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
 		glDrawArrays(GL_LINES, 0, points.size());
+
+		glBindVertexArray(VAO_axis);
+		model_matrix = axisTransform * worldRotation;
+		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(model_matrix));
+		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
+		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
+		glDrawArrays(GL_LINES, 0, axisPts.size());
 
 		glBindVertexArray(0);
 
