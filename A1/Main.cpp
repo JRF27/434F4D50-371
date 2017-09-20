@@ -32,6 +32,8 @@ glm::mat4 projection_matrix;
 glm::mat4 view_matrix;
 glm::mat4 model_matrix;
 
+glm::mat4 pacmanTransform;
+
 bool zoomEnabled = false;
 GLFWwindow* window;
 
@@ -62,15 +64,19 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			break;
 		case GLFW_KEY_A:
 			std::cout << "Move Left." << std::endl;
+			pacmanTransform = glm::translate(pacmanTransform, glm::vec3(0.0f, 0.0f, -1.0f));
 			break;
 		case GLFW_KEY_D:
 			std::cout << "Move Right." << std::endl;
+			pacmanTransform = glm::translate(pacmanTransform, glm::vec3(0.0f, 0.0f, 1.0f));
 			break;
 		case GLFW_KEY_W:
 			std::cout << "Move Up." << std::endl;
+			pacmanTransform = glm::translate(pacmanTransform, glm::vec3(1.0f, 0.0f, 0.0f));
 			break;
 		case GLFW_KEY_S:
 			std::cout << "Move Down." << std::endl;
+			pacmanTransform = glm::translate(pacmanTransform, glm::vec3(-1.0f, 0.0f, 0.0f));
 			break;
 		case GLFW_KEY_LEFT:
 			std::cout << "Rotate world -x." << std::endl;
@@ -343,8 +349,15 @@ int main()
 	std::vector<glm::vec2> UVs;
 	loadOBJ("teapot.obj", false, vertices, normals, UVs); //read the vertices from the .obj file
 
+	std::vector<glm::vec3> colorsTeapot;
+	for (int i = 0; i < vertices.size(); i++)
+	{
+		colorsTeapot.push_back(glm::vec3(1.0, 1.0, 0.0));
+	}
+
 	GLuint VAO_teapot;
 	GLuint verticesTeapot_VBO;
+	GLuint colorsTeapot_VBO;
 
 	glGenVertexArrays(1, &VAO_teapot);		// Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
 	glGenBuffers(1, &verticesTeapot_VBO);	//
@@ -356,12 +369,19 @@ int main()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(0);
 
+	glGenBuffers(1, &colorsTeapot_VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, colorsTeapot_VBO);
+	glBufferData(GL_ARRAY_BUFFER, colorsTeapot.size() * sizeof(glm::vec3), &colorsTeapot.front(), GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(1);
+
 	glBindBuffer(GL_ARRAY_BUFFER, 0);	// Unbind VBO
 	glBindVertexArray(0);				// Unbind VAO (it's always a good thing to unbind any buffer/array to prevent strange bugs)
 
 	// Object 2
 	GLuint VAO_lines;
 	GLuint verticesLines_VBO;
+	GLuint colorsLines_VBO;
 
 	std::vector<glm::vec3> points;
 	for (int i = -10; i <= 10; i++)
@@ -379,6 +399,12 @@ int main()
 	points.push_back(glm::vec3(0, 0, 0));
 	points.push_back(glm::vec3(0, 0, 1));
 
+	std::vector<glm::vec3> colors;
+	for (int i = 0; i < points.size(); i++)
+	{
+		colors.push_back(glm::vec3(1.0, 1.0, 1.0));
+	}
+
 	glGenVertexArrays(1, &VAO_lines);		// Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
 	glGenBuffers(1, &verticesLines_VBO);	//
 
@@ -388,6 +414,12 @@ int main()
 	glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(glm::vec3), &points.front(), GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(0);
+
+	glGenBuffers(1, &colorsLines_VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, colorsLines_VBO);
+	glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(glm::vec3), &colors.front(), GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(1);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);	// Unbind VBO
 	glBindVertexArray(0);				// Unbind VAO (it's always a good thing to unbind any buffer/array to prevent strange bugs)
@@ -399,6 +431,8 @@ int main()
 
 	camera_position = glm::vec3(0.0f, 10.0f, 0.0f);
 	triangle_scale = glm::vec3(1.0f);
+
+	pacmanTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 
 	// Game loop
 	while (!glfwWindowShouldClose(window))
@@ -419,9 +453,17 @@ int main()
 		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
 
 		glBindVertexArray(VAO_teapot);
+		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(pacmanTransform));
+		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
+		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
 		glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+
 		glBindVertexArray(VAO_lines);
+		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(model_matrix));
+		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
+		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
 		glDrawArrays(GL_LINES, 0, points.size());
+
 		glBindVertexArray(0);
 
 		// Swap the screen buffers
