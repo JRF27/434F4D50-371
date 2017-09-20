@@ -28,19 +28,17 @@ glm::vec3 triangle_scale;
 // Recipe: projection_matrix * view_matrix * model_matrix
 glm::mat4 projection_matrix;
 glm::mat4 view_matrix;
-glm::mat4 model_matrix;
 
 // Transforms
-glm::mat4 pacmanTransform;
+glm::mat4 pacmanWorldTransform;
 glm::mat4 axisTransform;
-
-// Scales
-glm::mat4 pacmanScaleMatrix;
 
 // Rotations
 glm::mat4 worldRotation;
 
 bool zoomEnabled = false;
+bool cameraPanningX = false;
+bool cameraTiltingY = false;
 GLFWwindow* window;
 
 /**
@@ -70,19 +68,19 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			break;
 		case GLFW_KEY_A:
 			std::cout << "Move Left." << std::endl;
-			pacmanTransform = glm::translate(pacmanTransform, glm::vec3(0.0f, 0.0f, -1.0f));
+			pacmanWorldTransform = glm::translate(pacmanWorldTransform, glm::vec3(0.0f, 0.0f, -1.0f));
 			break;
 		case GLFW_KEY_D:
 			std::cout << "Move Right." << std::endl;
-			pacmanTransform = glm::translate(pacmanTransform, glm::vec3(0.0f, 0.0f, 1.0f));
+			pacmanWorldTransform = glm::translate(pacmanWorldTransform, glm::vec3(0.0f, 0.0f, 1.0f));
 			break;
 		case GLFW_KEY_W:
 			std::cout << "Move Up." << std::endl;
-			pacmanTransform = glm::translate(pacmanTransform, glm::vec3(1.0f, 0.0f, 0.0f));
+			pacmanWorldTransform = glm::translate(pacmanWorldTransform, glm::vec3(1.0f, 0.0f, 0.0f));
 			break;
 		case GLFW_KEY_S:
 			std::cout << "Move Down." << std::endl;
-			pacmanTransform = glm::translate(pacmanTransform, glm::vec3(-1.0f, 0.0f, 0.0f));
+			pacmanWorldTransform = glm::translate(pacmanWorldTransform, glm::vec3(-1.0f, 0.0f, 0.0f));
 			break;
 		case GLFW_KEY_LEFT:
 			std::cout << "Rotate world -x." << std::endl;
@@ -174,6 +172,26 @@ void mouse_button_callback(GLFWwindow *_window, int button, int action, int mods
 	{
 		std::cout << "Left Mouse released." << std::endl;
 		zoomEnabled = false;
+	}
+	else if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS)
+	{
+		std::cout << "Middle Mouse pressed." << std::endl;
+		cameraTiltingY = true;
+	}
+	else if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_RELEASE)
+	{
+		std::cout << "Middle Mouse released." << std::endl;
+		cameraTiltingY = false;
+	}
+	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+	{
+		std::cout << "Right Mouse pressed." << std::endl;
+		cameraPanningX = true;
+	}
+	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
+	{
+		std::cout << "Right Mouse released." << std::endl;
+		cameraPanningX = false;
 	}
 }
 
@@ -431,10 +449,6 @@ int main()
 	GLuint VAO_axis;
 	GLuint verticesAxis_VBO;
 	GLuint colorsAxis_VBO;
-
-	glGenVertexArrays(1, &VAO_axis);		// Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
-	glGenBuffers(1, &verticesAxis_VBO);	//
-
 	std::vector<glm::vec3> axisPts;
 	axisPts.push_back(glm::vec3(0, 0, 0));
 	axisPts.push_back(glm::vec3(1, 0, 0));
@@ -451,6 +465,9 @@ int main()
 	axisColors.push_back(glm::vec3(0.0, 0.0, 1.0));
 	axisColors.push_back(glm::vec3(0.0, 0.0, 1.0));
 
+	glGenVertexArrays(1, &VAO_axis);		// Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
+	glGenBuffers(1, &verticesAxis_VBO);	//
+
 	glBindVertexArray(VAO_axis);
 	glBindBuffer(GL_ARRAY_BUFFER, verticesAxis_VBO);
 	glBufferData(GL_ARRAY_BUFFER, axisPts.size() * sizeof(glm::vec3), &axisPts.front(), GL_STATIC_DRAW);
@@ -460,6 +477,37 @@ int main()
 	glGenBuffers(1, &colorsAxis_VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, colorsAxis_VBO);
 	glBufferData(GL_ARRAY_BUFFER, axisColors.size() * sizeof(glm::vec3), &axisColors.front(), GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(1);
+
+	// Object 4
+	std::vector<glm::vec3> vertices2;
+	std::vector<glm::vec3> normals2;
+	std::vector<glm::vec2> UVs2;
+	loadOBJ("sphere.obj", false, vertices2, normals2, UVs2); //read the vertices from the .obj file
+
+	std::vector<glm::vec3> colorsSphere;
+	for (int i = 0; i < vertices2.size(); i++)
+	{
+		colorsSphere.push_back(glm::vec3(1.0, 0.0, 0.0));
+	}
+
+	GLuint VAO_sphere;
+	GLuint verticesSphere_VBO;
+	GLuint colorsSphere_VBO;
+
+	glGenVertexArrays(1, &VAO_sphere);		// Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
+	glGenBuffers(1, &verticesSphere_VBO);	//
+
+	glBindVertexArray(VAO_sphere);
+	glBindBuffer(GL_ARRAY_BUFFER, verticesSphere_VBO);
+	glBufferData(GL_ARRAY_BUFFER, vertices2.size() * sizeof(glm::vec3), &vertices2.front(), GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(0);
+
+	glGenBuffers(1, &colorsSphere_VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, colorsSphere_VBO);
+	glBufferData(GL_ARRAY_BUFFER, colorsSphere.size() * sizeof(glm::vec3), &colorsSphere.front(), GL_STATIC_DRAW);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(1);
 
@@ -475,8 +523,21 @@ int main()
 	triangle_scale = glm::vec3(1.0f);
 
 	axisTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-	pacmanTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-	pacmanScaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.05f, 0.05f, 0.05f));
+	pacmanWorldTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+
+
+	// Scales
+	glm::mat4 pacmanLocalScaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.045f, 0.045f, 0.045f));
+	glm::mat4 sphereLocalScaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.5f, 0.5f, 0.5f));
+
+	glm::mat4 pacmanLocalTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, 0.0f, -0.5f));
+	glm::mat4 sphereLocalTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, 0.0f, 0.5f));
+
+	glm::mat4 pacmanLocalRotationMatrix = glm::rotate(glm::mat4(1.0f), 0.0f ,glm::vec3(0.0f, 0.0f, 1.0f));
+
+	// Temp objects
+	glm::mat4 model_matrixLocal;
+	glm::mat4 model_matrix;
 
 	// Game loop
 	while (!glfwWindowShouldClose(window))
@@ -484,7 +545,7 @@ int main()
 		// Check if any events have been activiated (key pressed, mouse moved etc.) and call corresponding response functions
 		glfwPollEvents();
 
-		// Render
+		
 		// Clear the colorbuffer
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
@@ -492,13 +553,10 @@ int main()
 		view_matrix = glm::lookAt(camera_position, camera_direction, glm::vec3(1.0f, 0.0f, 0.0f));//UP);
 		model_matrix = glm::scale(model_matrix, triangle_scale);
 
-		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(model_matrix));
-		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
-		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
-
+		// Render
 		glBindVertexArray(VAO_pacman);
-		model_matrix =  worldRotation * pacmanScaleMatrix * pacmanTransform;
-		model_matrix = glm::scale(model_matrix, triangle_scale);
+		model_matrixLocal = pacmanLocalTranslateMatrix * pacmanLocalRotationMatrix * pacmanLocalScaleMatrix;
+		model_matrix = worldRotation * pacmanWorldTransform * glm::scale(model_matrixLocal, triangle_scale);
 		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(model_matrix));
 		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
 		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
@@ -517,6 +575,14 @@ int main()
 		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
 		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
 		glDrawArrays(GL_LINES, 0, axisPts.size());
+
+		glBindVertexArray(VAO_sphere);
+		model_matrixLocal = sphereLocalTranslateMatrix * sphereLocalScaleMatrix;
+		model_matrix = worldRotation * glm::scale(model_matrixLocal, triangle_scale);
+		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(model_matrix));
+		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
+		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
+		glDrawArrays(GL_TRIANGLES, 0, vertices2.size());
 
 		glBindVertexArray(0);
 
