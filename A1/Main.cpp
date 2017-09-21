@@ -24,10 +24,16 @@ const GLfloat SCALE_FACTOR = 0.05f;
 const glm::vec3 ORIGIN(0.0f, 0.0f, 0.0f);
 const glm::vec3 UP(0.0f, 1.0f, 0.0f);
 
+// Enums
+enum PacmanDirection { left, right, up, down };
+
 // Globals
 glm::vec3 camera_position;
 glm::vec3 camera_direction;
 glm::vec3 triangle_scale;
+
+PacmanDirection currentDirection = up;
+glm::mat4 pacManGlobalRotation;
 
 // Recipe: projection_matrix * view_matrix * model_matrix
 glm::mat4 projection_matrix;
@@ -73,18 +79,38 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		case GLFW_KEY_A:
 			std::cout << "Move Left." << std::endl;
 			pacmanWorldTransform = glm::translate(pacmanWorldTransform, glm::vec3(0.0f, 0.0f, -1.0f));
+			if (currentDirection != PacmanDirection::left)
+			{
+				currentDirection = PacmanDirection::left;
+				pacManGlobalRotation = glm::rotate(glm::mat4(1.0f), 1.571f, glm::vec3(0.0f, 1.0f, 0.0f));
+			}
 			break;
 		case GLFW_KEY_D:
 			std::cout << "Move Right." << std::endl;
 			pacmanWorldTransform = glm::translate(pacmanWorldTransform, glm::vec3(0.0f, 0.0f, 1.0f));
+			if (currentDirection != PacmanDirection::right)
+			{
+				currentDirection = PacmanDirection::right;
+				pacManGlobalRotation = glm::rotate(glm::mat4(1.0f), -1.571f, glm::vec3(0.0f, 1.0f, 0.0f));
+			}
 			break;
 		case GLFW_KEY_W:
 			std::cout << "Move Up." << std::endl;
 			pacmanWorldTransform = glm::translate(pacmanWorldTransform, glm::vec3(1.0f, 0.0f, 0.0f));
+			if (currentDirection != PacmanDirection::up)
+			{
+				currentDirection = PacmanDirection::up;
+				pacManGlobalRotation = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+			}
 			break;
 		case GLFW_KEY_S:
 			std::cout << "Move Down." << std::endl;
 			pacmanWorldTransform = glm::translate(pacmanWorldTransform, glm::vec3(-1.0f, 0.0f, 0.0f));
+			if (currentDirection != PacmanDirection::down)
+			{
+				currentDirection = PacmanDirection::down;
+				pacManGlobalRotation = glm::rotate(glm::mat4(1.0f), 2*1.571f, glm::vec3(0.0f, 1.0f, 0.0f));
+			}
 			break;
 		case GLFW_KEY_LEFT:
 			std::cout << "Rotate world -x." << std::endl;
@@ -533,7 +559,7 @@ int main()
 	glm::mat4 sphereLocalTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, 0.0f, 0.5f));
 	glm::mat4 gridLocalTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-(GLfloat) GRID_SIZE / 2.0f, 0.0f, -(GLfloat) GRID_SIZE / 2.0f));
 
-	glm::mat4 pacmanLocalRotationMatrix = glm::rotate(glm::mat4(1.0f), 0.0f ,glm::vec3(0.0f, 0.0f, 1.0f));
+	glm::mat4 pacmanLocalRotationMatrix = glm::rotate(glm::mat4(1.0f), 0.0f ,glm::vec3(1.0f, 0.0f, 0.0f)); //1.571 radians is 90 degrees
 
 	// Temp objects
 	glm::mat4 model_matrixLocal;
@@ -554,7 +580,7 @@ int main()
 
 		// Render
 		glBindVertexArray(VAO_pacman);
-		model_matrixLocal = pacmanLocalTranslateMatrix * pacmanLocalRotationMatrix * pacmanLocalScaleMatrix;
+		model_matrixLocal = pacmanLocalTranslateMatrix * pacManGlobalRotation * pacmanLocalRotationMatrix * pacmanLocalScaleMatrix;
 		model_matrix = worldRotation * pacmanWorldTransform * glm::scale(model_matrixLocal, triangle_scale);
 		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(model_matrix));
 		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
