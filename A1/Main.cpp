@@ -42,7 +42,7 @@ glm::mat4 projection_matrix;
 glm::mat4 view_matrix;
 
 // Transforms
-glm::mat4 pacmanWorldTransform;
+glm::vec3 pacmanWorldTranslationVector;
 glm::mat4 axisTransform;
 
 // Rotations
@@ -73,7 +73,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			std::cout << "Re-position player at random." << std::endl;
 			temp_x = (rand() % GRID_SIZE) - GRID_SIZE / 2;
 			temp_z = (rand() % GRID_SIZE) - GRID_SIZE / 2;
-			pacmanWorldTransform = glm::translate(glm::mat4(4), glm::vec3(temp_x, 0.0f, temp_z));
+			pacmanWorldTranslationVector = glm::vec3(temp_x, 0.0f, temp_z);
 			break;
 		case GLFW_KEY_U:
 			std::cout << "Scale-up." << std::endl;
@@ -85,7 +85,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			break;
 		case GLFW_KEY_A:
 			std::cout << "Move Left." << std::endl;
-			pacmanWorldTransform = glm::translate(pacmanWorldTransform, glm::vec3(0.0f, 0.0f, -1.0f));
+			pacmanWorldTranslationVector += glm::vec3(0.0f, 0.0f, -1.0f);
 			if (currentDirection != PacmanDirection::left)
 			{
 				currentDirection = PacmanDirection::left;
@@ -94,7 +94,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			break;
 		case GLFW_KEY_D:
 			std::cout << "Move Right." << std::endl;
-			pacmanWorldTransform = glm::translate(pacmanWorldTransform, glm::vec3(0.0f, 0.0f, 1.0f));
+			pacmanWorldTranslationVector += glm::vec3(0.0f, 0.0f, 1.0f);
 			if (currentDirection != PacmanDirection::right)
 			{
 				currentDirection = PacmanDirection::right;
@@ -103,7 +103,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			break;
 		case GLFW_KEY_W:
 			std::cout << "Move Up." << std::endl;
-			pacmanWorldTransform = glm::translate(pacmanWorldTransform, glm::vec3(1.0f, 0.0f, 0.0f));
+			pacmanWorldTranslationVector += glm::vec3(1.0f, 0.0f, 0.0f);
 			if (currentDirection != PacmanDirection::up)
 			{
 				currentDirection = PacmanDirection::up;
@@ -112,7 +112,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			break;
 		case GLFW_KEY_S:
 			std::cout << "Move Down." << std::endl;
-			pacmanWorldTransform = glm::translate(pacmanWorldTransform, glm::vec3(-1.0f, 0.0f, 0.0f));
+			pacmanWorldTranslationVector += glm::vec3(-1.0f, 0.0f, 0.0f);
 			if (currentDirection != PacmanDirection::down)
 			{
 				currentDirection = PacmanDirection::down;
@@ -186,7 +186,7 @@ void error_callback(int error, const char* description)
 }
 
 /*
-	This is called whenever the mouse has moved its position.
+	This is called whenever a mouse button is pressed/released via GLFW.
 
 	Source: https://learnopengl.com/#!Getting-started/Camera
 */
@@ -196,7 +196,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 }
 
 /*
-
+	This is called whenever the window has been resized via GLFW.
 */
 void mouse_button_callback(GLFWwindow *_window, int button, int action, int mods)
 {
@@ -556,7 +556,7 @@ int main()
 	triangle_scale = glm::vec3(1.0f);
 
 	axisTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-	pacmanWorldTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+	pacmanWorldTranslationVector = glm::vec3(0.0f, 0.0f, 0.0f);
 
 	// Scales
 	glm::mat4 pacmanLocalScaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.045f, 0.045f, 0.045f));
@@ -576,14 +576,16 @@ int main()
 	std::vector<glm::vec3> allGridPoints;
 	for (int x = 0; x <= GRID_SIZE; x++)
 		for (int z = 0; z <= GRID_SIZE; z++)
-			allGridPoints.push_back(glm::vec3(x, 0, z));
+			allGridPoints.push_back(glm::vec3(x - GRID_SIZE / 2.0f, 0, z - GRID_SIZE / 2.0f));
 
 	std::random_shuffle(allGridPoints.begin(), allGridPoints.end());
 
 	std::vector<glm::vec3> sphereTransforms;
+	std::vector<bool> hiddenSphereTransforms;
 	for (int i = 0; i < SPHERE_NUMBER; i++)
 	{
 		sphereTransforms.push_back(allGridPoints.at(i));
+		hiddenSphereTransforms.push_back(false);
 	}
 
 	// Game loop
@@ -602,7 +604,7 @@ int main()
 		// Render
 		glBindVertexArray(VAO_pacman);
 		model_matrixLocal = pacmanLocalTranslateMatrix * pacmanLocalRotationMatrix * pacmanCorrectionRotationMatrix * pacmanLocalScaleMatrix;
-		model_matrix = worldRotation * pacmanWorldTransform * glm::scale(model_matrixLocal, triangle_scale);
+		model_matrix = worldRotation * glm::translate(glm::mat4(1.0f), pacmanWorldTranslationVector) * glm::scale(model_matrixLocal, triangle_scale);
 		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(model_matrix));
 		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
 		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
@@ -625,13 +627,22 @@ int main()
 
 		for (int i = 0; i < sphereTransforms.size(); i++)
 		{
-			glBindVertexArray(VAO_sphere);
-			model_matrixLocal = glm::translate(glm::mat4(1.0f), sphereTransforms.at(i)) * gridLocalTranslateMatrix * sphereLocalTranslateMatrix * sphereLocalScaleMatrix;
-			model_matrix = worldRotation * glm::scale(model_matrixLocal, triangle_scale);
-			glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(model_matrix));
-			glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
-			glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
-			glDrawArrays(GL_TRIANGLES, 0, vertices2.size());
+			// check if it needs to be hidden
+			if ((sphereTransforms.at(i).x == pacmanWorldTranslationVector.x) && (sphereTransforms.at(i).z == pacmanWorldTranslationVector.z))
+				hiddenSphereTransforms.at(i) = true;
+
+			// if it is not hidden then render it
+
+			if (!hiddenSphereTransforms.at(i))
+			{
+				glBindVertexArray(VAO_sphere);
+				model_matrixLocal = glm::translate(glm::mat4(1.0f), sphereTransforms.at(i)) * sphereLocalTranslateMatrix * sphereLocalScaleMatrix;
+				model_matrix = worldRotation * glm::scale(model_matrixLocal, triangle_scale);
+				glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(model_matrix));
+				glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
+				glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
+				glDrawArrays(GL_TRIANGLES, 0, vertices2.size());
+			}
 		}
 
 		glBindVertexArray(0);
