@@ -33,7 +33,7 @@ glm::vec3 camera_direction;
 glm::vec3 triangle_scale;
 
 PacmanDirection currentDirection = up;
-glm::mat4 pacManGlobalRotation;
+glm::mat4 pacmanLocalRotationMatrix;
 
 // Recipe: projection_matrix * view_matrix * model_matrix
 glm::mat4 projection_matrix;
@@ -82,7 +82,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			if (currentDirection != PacmanDirection::left)
 			{
 				currentDirection = PacmanDirection::left;
-				pacManGlobalRotation = glm::rotate(glm::mat4(1.0f), 1.571f, glm::vec3(0.0f, 1.0f, 0.0f));
+				pacmanLocalRotationMatrix = glm::rotate(glm::mat4(1.0f), 1.571f, glm::vec3(0.0f, 1.0f, 0.0f));
 			}
 			break;
 		case GLFW_KEY_D:
@@ -91,7 +91,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			if (currentDirection != PacmanDirection::right)
 			{
 				currentDirection = PacmanDirection::right;
-				pacManGlobalRotation = glm::rotate(glm::mat4(1.0f), -1.571f, glm::vec3(0.0f, 1.0f, 0.0f));
+				pacmanLocalRotationMatrix = glm::rotate(glm::mat4(1.0f), -1.571f, glm::vec3(0.0f, 1.0f, 0.0f));
 			}
 			break;
 		case GLFW_KEY_W:
@@ -100,7 +100,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			if (currentDirection != PacmanDirection::up)
 			{
 				currentDirection = PacmanDirection::up;
-				pacManGlobalRotation = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+				pacmanLocalRotationMatrix = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 			}
 			break;
 		case GLFW_KEY_S:
@@ -109,7 +109,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			if (currentDirection != PacmanDirection::down)
 			{
 				currentDirection = PacmanDirection::down;
-				pacManGlobalRotation = glm::rotate(glm::mat4(1.0f), 2*1.571f, glm::vec3(0.0f, 1.0f, 0.0f));
+				pacmanLocalRotationMatrix = glm::rotate(glm::mat4(1.0f), 2*1.571f, glm::vec3(0.0f, 1.0f, 0.0f));
 			}
 			break;
 		case GLFW_KEY_LEFT:
@@ -559,7 +559,7 @@ int main()
 	glm::mat4 sphereLocalTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, 0.0f, 0.5f));
 	glm::mat4 gridLocalTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-(GLfloat) GRID_SIZE / 2.0f, 0.0f, -(GLfloat) GRID_SIZE / 2.0f));
 
-	glm::mat4 pacmanLocalRotationMatrix = glm::rotate(glm::mat4(1.0f), 0.0f ,glm::vec3(1.0f, 0.0f, 0.0f)); //1.571 radians is 90 degrees
+	glm::mat4 pacmanCorrectionRotationMatrix = glm::rotate(glm::mat4(1.0f), 0.0f ,glm::vec3(1.0f, 0.0f, 0.0f)); //1.571 radians is 90 degrees
 
 	// Temp objects
 	glm::mat4 model_matrixLocal;
@@ -580,7 +580,7 @@ int main()
 
 		// Render
 		glBindVertexArray(VAO_pacman);
-		model_matrixLocal = pacmanLocalTranslateMatrix * pacManGlobalRotation * pacmanLocalRotationMatrix * pacmanLocalScaleMatrix;
+		model_matrixLocal = pacmanLocalTranslateMatrix * pacmanLocalRotationMatrix * pacmanCorrectionRotationMatrix * pacmanLocalScaleMatrix;
 		model_matrix = worldRotation * pacmanWorldTransform * glm::scale(model_matrixLocal, triangle_scale);
 		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(model_matrix));
 		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
