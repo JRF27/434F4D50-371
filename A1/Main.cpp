@@ -3,6 +3,7 @@
 #include "..\glew\glew.h"					// include GL Extension Wrangler
 #include "..\glfw\glfw3.h"					// include GLFW helper library
 #include <stdio.h>
+#include <algorithm>						// std::random_shuffle
 #include <iostream>
 #include <string>
 #include <fstream>
@@ -20,6 +21,7 @@ const GLuint HEIGHT = 800;
 
 const int GRID_SIZE = 20;	// # Lines = GRID_SIZE + 1
 const int AXIS_LENGTH = 4;
+const int SPHERE_NUMBER = 8;
 const GLfloat SCALE_FACTOR = 0.05f;
 const glm::vec3 ORIGIN(0.0f, 0.0f, 0.0f);
 const glm::vec3 UP(0.0f, 1.0f, 0.0f);
@@ -565,6 +567,20 @@ int main()
 	glm::mat4 model_matrixLocal;
 	glm::mat4 model_matrix;
 
+	// Randomness
+	std::vector<glm::vec3> allGridPoints;
+	for (int x = 0; x <= GRID_SIZE; x++)
+		for (int z = 0; z <= GRID_SIZE; z++)
+			allGridPoints.push_back(glm::vec3(x, 0, z));
+
+	std::random_shuffle(allGridPoints.begin(), allGridPoints.end());
+
+	std::vector<glm::vec3> sphereTransforms;
+	for (int i = 0; i < SPHERE_NUMBER; i++)
+	{
+		sphereTransforms.push_back(allGridPoints.at(i));
+	}
+
 	// Game loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -602,13 +618,16 @@ int main()
 		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
 		glDrawArrays(GL_LINES, 0, axisPts.size());
 
-		glBindVertexArray(VAO_sphere);
-		model_matrixLocal = sphereLocalTranslateMatrix * sphereLocalScaleMatrix;
-		model_matrix = worldRotation * glm::scale(model_matrixLocal, triangle_scale);
-		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(model_matrix));
-		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
-		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
-		glDrawArrays(GL_TRIANGLES, 0, vertices2.size());
+		for (int i = 0; i < sphereTransforms.size(); i++)
+		{
+			glBindVertexArray(VAO_sphere);
+			model_matrixLocal = glm::translate(glm::mat4(1.0f), sphereTransforms.at(i)) * gridLocalTranslateMatrix * sphereLocalTranslateMatrix * sphereLocalScaleMatrix;
+			model_matrix = worldRotation * glm::scale(model_matrixLocal, triangle_scale);
+			glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(model_matrix));
+			glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
+			glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
+			glDrawArrays(GL_TRIANGLES, 0, vertices2.size());
+		}
 
 		glBindVertexArray(0);
 
