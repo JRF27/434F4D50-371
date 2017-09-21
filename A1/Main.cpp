@@ -562,8 +562,8 @@ int main()
 	glm::mat4 pacmanLocalScaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.045f, 0.045f, 0.045f));
 	glm::mat4 sphereLocalScaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.5f, 0.5f, 0.5f));
 
-	glm::mat4 pacmanLocalTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, 0.0f, -0.5f));
-	glm::mat4 sphereLocalTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, 0.0f, 0.5f));
+	glm::mat4 pacmanLocalTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+	glm::mat4 sphereLocalTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 	glm::mat4 gridLocalTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-(GLfloat) GRID_SIZE / 2.0f, 0.0f, -(GLfloat) GRID_SIZE / 2.0f));
 
 	glm::mat4 pacmanCorrectionRotationMatrix = glm::rotate(glm::mat4(1.0f), 0.0f ,glm::vec3(1.0f, 0.0f, 0.0f)); //1.571 radians is 90 degrees
