@@ -62,6 +62,8 @@ GLFWwindow* window;
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
 	static bool toggleMouse = false;
+	int temp_x;
+	int temp_z;
 
 	if (action == GLFW_PRESS || action == GLFW_REPEAT)
 	{
@@ -69,6 +71,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		{
 		case GLFW_KEY_SPACE:
 			std::cout << "Re-position player at random." << std::endl;
+			temp_x = (rand() % GRID_SIZE) - GRID_SIZE / 2;
+			temp_z = (rand() % GRID_SIZE) - GRID_SIZE / 2;
+			pacmanWorldTransform = glm::translate(glm::mat4(4), glm::vec3(temp_x, 0.0f, temp_z));
 			break;
 		case GLFW_KEY_U:
 			std::cout << "Scale-up." << std::endl;
