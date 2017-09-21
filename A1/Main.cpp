@@ -15,7 +15,11 @@
 using namespace std;
 
 // Constants
-const GLuint WIDTH = 800, HEIGHT = 800;
+const GLuint WIDTH = 800;
+const GLuint HEIGHT = 800;
+
+const int GRID_SIZE = 20;	// # Lines = GRID_SIZE + 1
+const int AXIS_LENGTH = 4;
 const GLfloat SCALE_FACTOR = 0.05f;
 const glm::vec3 ORIGIN(0.0f, 0.0f, 0.0f);
 const glm::vec3 UP(0.0f, 1.0f, 0.0f);
@@ -408,20 +412,16 @@ int main()
 	GLuint colorsLines_VBO;
 
 	std::vector<glm::vec3> points;
-	for (int i = -10; i <= 10; i++)
+	for (int i = 0; i <= GRID_SIZE; i++)
 	{
-		points.push_back(glm::vec3(i, 0, 10));
-		points.push_back(glm::vec3(i, 0, -10));
-		points.push_back(glm::vec3(10, 0, i));
-		points.push_back(glm::vec3(-10, 0, i));
-	}
+		// Horizontal Lines
+		points.push_back(glm::vec3(i, 0, 0));
+		points.push_back(glm::vec3(i, 0, GRID_SIZE));
 
-	points.push_back(glm::vec3(0, 0, 0));
-	points.push_back(glm::vec3(1, 0, 0));
-	points.push_back(glm::vec3(0, 0, 0));
-	points.push_back(glm::vec3(0, 1, 0));
-	points.push_back(glm::vec3(0, 0, 0));
-	points.push_back(glm::vec3(0, 0, 1));
+		// Vertical Lines
+		points.push_back(glm::vec3(0, 0, i));
+		points.push_back(glm::vec3(GRID_SIZE, 0, i));
+	}
 
 	std::vector<glm::vec3> colors;
 	for (int i = 0; i < points.size(); i++)
@@ -451,11 +451,11 @@ int main()
 	GLuint colorsAxis_VBO;
 	std::vector<glm::vec3> axisPts;
 	axisPts.push_back(glm::vec3(0, 0, 0));
-	axisPts.push_back(glm::vec3(1, 0, 0));
+	axisPts.push_back(glm::vec3(AXIS_LENGTH, 0, 0));
 	axisPts.push_back(glm::vec3(0, 0, 0));
-	axisPts.push_back(glm::vec3(0, 1, 0));
+	axisPts.push_back(glm::vec3(0, AXIS_LENGTH, 0));
 	axisPts.push_back(glm::vec3(0, 0, 0));
-	axisPts.push_back(glm::vec3(0, 0, 1));
+	axisPts.push_back(glm::vec3(0, 0, AXIS_LENGTH));
 
 	std::vector<glm::vec3> axisColors;
 	axisColors.push_back(glm::vec3(1.0, 0.0, 0.0));
@@ -525,13 +525,13 @@ int main()
 	axisTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 	pacmanWorldTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 
-
 	// Scales
 	glm::mat4 pacmanLocalScaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.045f, 0.045f, 0.045f));
 	glm::mat4 sphereLocalScaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.5f, 0.5f, 0.5f));
 
 	glm::mat4 pacmanLocalTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, 0.0f, -0.5f));
 	glm::mat4 sphereLocalTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, 0.0f, 0.5f));
+	glm::mat4 gridLocalTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-(GLfloat) GRID_SIZE / 2.0f, 0.0f, -(GLfloat) GRID_SIZE / 2.0f));
 
 	glm::mat4 pacmanLocalRotationMatrix = glm::rotate(glm::mat4(1.0f), 0.0f ,glm::vec3(0.0f, 0.0f, 1.0f));
 
@@ -545,7 +545,6 @@ int main()
 		// Check if any events have been activiated (key pressed, mouse moved etc.) and call corresponding response functions
 		glfwPollEvents();
 
-		
 		// Clear the colorbuffer
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
@@ -563,7 +562,8 @@ int main()
 		glDrawArrays(GL_TRIANGLES, 0, vertices.size());
 
 		glBindVertexArray(VAO_lines);
-		model_matrix = axisTransform * worldRotation;
+		model_matrixLocal = gridLocalTranslateMatrix;
+		model_matrix = worldRotation * model_matrixLocal;
 		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(model_matrix));
 		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
 		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
