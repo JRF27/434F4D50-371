@@ -138,6 +138,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		case GLFW_KEY_HOME:
 			std::cout << "Reset world rotation." << std::endl;
 			worldRotation = glm::mat4(1.0f);
+			// Should also reset the camera to the initial position.
 			break;
 		case GLFW_KEY_P:
 			std::cout << "Rendered as Points." << std::endl;
@@ -157,7 +158,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			toggleMouse ? glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL) : glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 			break;
 		default:
-			std::cout << "Unimplemented key #" << key << "pressed." << std::endl;
+			//std::cout << "Unimplemented key #" << key << "pressed." << std::endl;
 			break;
 		}
 	}
@@ -298,6 +299,11 @@ int init()
 
 int main()
 {
+	int number;
+	std:cout << "Please enter a positive integer for the grid size: ";
+	scanf_s("%d", &number);
+	std::cout << "Entered... " << number << std::endl;
+
 	if (init() == 1)
 	{
 		std::cout << "Initialization complete!" << std::endl;
