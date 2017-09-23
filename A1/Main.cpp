@@ -19,7 +19,6 @@ using namespace std;
 const GLuint WIDTH = 800;
 const GLuint HEIGHT = 800;
 
-const int GRID_SIZE = 20;	// # Lines = GRID_SIZE + 1
 const int AXIS_LENGTH = 4;
 const int SPHERE_NUMBER = 8;
 const GLfloat SCALE_FACTOR = 0.05f;
@@ -30,6 +29,7 @@ const glm::vec3 UP(0.0f, 1.0f, 0.0f);
 enum PacmanDirection { left, right, up, down };
 
 // Globals
+int gridWidth = 2;
 glm::vec3 camera_position;
 glm::vec3 camera_direction;
 glm::vec3 triangle_scale;
@@ -71,8 +71,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		{
 		case GLFW_KEY_SPACE:
 			std::cout << "Re-position player at random." << std::endl;
-			temp_x = (rand() % GRID_SIZE) - GRID_SIZE / 2;
-			temp_z = (rand() % GRID_SIZE) - GRID_SIZE / 2;
+			temp_x = (rand() % gridWidth) - gridWidth / 2;
+			temp_z = (rand() % gridWidth) - gridWidth / 2;
 			pacmanWorldTranslationVector = glm::vec3(temp_x, 0.0f, temp_z);
 			break;
 		case GLFW_KEY_U:
@@ -299,10 +299,16 @@ int init()
 
 int main()
 {
-	int number;
-	std:cout << "Please enter a positive integer for the grid size: ";
-	scanf_s("%d", &number);
-	std::cout << "Entered... " << number << std::endl;
+	while (true)
+	{
+		std:cout << "Please enter a positive integer ( 2 <= size <= 100) for the grid size: ";
+		scanf_s("%d", &gridWidth);
+		std::cout << "Entered... " << gridWidth << std::endl;
+		if (gridWidth < 2 || gridWidth > 100)
+			continue;
+		else
+			break;
+	}
 
 	if (init() == 1)
 	{
@@ -451,15 +457,15 @@ int main()
 	GLuint colorsLines_VBO;
 
 	std::vector<glm::vec3> points;
-	for (int i = 0; i <= GRID_SIZE; i++)
+	for (int i = 0; i <= gridWidth; i++)
 	{
 		// Horizontal Lines
 		points.push_back(glm::vec3(i, 0, 0));
-		points.push_back(glm::vec3(i, 0, GRID_SIZE));
+		points.push_back(glm::vec3(i, 0, gridWidth));
 
 		// Vertical Lines
 		points.push_back(glm::vec3(0, 0, i));
-		points.push_back(glm::vec3(GRID_SIZE, 0, i));
+		points.push_back(glm::vec3(gridWidth, 0, i));
 	}
 
 	std::vector<glm::vec3> colors;
@@ -570,7 +576,7 @@ int main()
 
 	glm::mat4 pacmanLocalTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 	glm::mat4 sphereLocalTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-	glm::mat4 gridLocalTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-(GLfloat) GRID_SIZE / 2.0f, 0.0f, -(GLfloat) GRID_SIZE / 2.0f));
+	glm::mat4 gridLocalTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-(GLfloat) gridWidth / 2.0f, 0.0f, -(GLfloat) gridWidth / 2.0f));
 
 	glm::mat4 pacmanCorrectionRotationMatrix = glm::rotate(glm::mat4(1.0f), 0.0f ,glm::vec3(1.0f, 0.0f, 0.0f)); //1.571 radians is 90 degrees
 
@@ -580,9 +586,9 @@ int main()
 
 	// Randomness
 	std::vector<glm::vec3> allGridPoints;
-	for (int x = 0; x <= GRID_SIZE; x++)
-		for (int z = 0; z <= GRID_SIZE; z++)
-			allGridPoints.push_back(glm::vec3(x - GRID_SIZE / 2.0f, 0, z - GRID_SIZE / 2.0f));
+	for (int x = 0; x <= gridWidth; x++)
+		for (int z = 0; z <= gridWidth; z++)
+			allGridPoints.push_back(glm::vec3(x - gridWidth / 2.0f, 0, z - gridWidth / 2.0f));
 
 	std::random_shuffle(allGridPoints.begin(), allGridPoints.end());
 
