@@ -30,9 +30,11 @@ enum PacmanDirection { left, right, up, down };
 
 // Globals
 int gridWidth = 2;
+glm::vec3 triangle_scale;
+
 glm::vec3 camera_position;
 glm::vec3 camera_direction;
-glm::vec3 triangle_scale;
+glm::vec3 camera_up;
 
 PacmanDirection currentDirection = up;
 glm::mat4 pacmanLocalRotationMatrix;
@@ -48,9 +50,9 @@ glm::mat4 axisTransform;
 // Rotations
 glm::mat4 worldRotation;
 
-bool zoomEnabled = false;
-bool cameraPanningX = false;
-bool cameraTiltingY = false;
+bool cameraZoomingEnabled = false;
+bool cameraPanningEnabled = false;
+bool cameraTiltingEnabled = false;
 GLFWwindow* window;
 
 /**
@@ -138,7 +140,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		case GLFW_KEY_HOME:
 			std::cout << "Reset world rotation." << std::endl;
 			worldRotation = glm::mat4(1.0f);
-			// Should also reset the camera to the initial position.
+			// Reset Camera
+			camera_position = glm::vec3(10.0f, 3.0f, 0.0f);
+			camera_direction = glm::vec3(0.0f);
+			camera_up = UP;
 			break;
 		case GLFW_KEY_P:
 			std::cout << "Rendered as Points." << std::endl;
@@ -186,50 +191,83 @@ void error_callback(int error, const char* description)
 	fputs(description, stderr);
 }
 
+glm::vec2 lastMousePoint = glm::vec2(WIDTH/2, HEIGHT/2);
+
 /*
-	This is called whenever a mouse button is pressed/released via GLFW.
+	This is called whenever the mouse's cursor position has changed via GLFW.
 
 	Source: https://learnopengl.com/#!Getting-started/Camera
 */
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
+	glm::vec2 point = glm::vec2(xpos, ypos);
+	//std::cout << "Mouse at (" << point.x << "," << point.y << ")" << std::endl;
 
+	// Calculate delta's
+	float xoffset = point.x - lastMousePoint.x;
+	float yoffset = lastMousePoint.y - point.y;
+	lastMousePoint.x = xpos;
+	lastMousePoint.y = ypos;
+
+	if (cameraPanningEnabled)
+	{
+		// move the cameras position and direction vectors
+		camera_position += glm::vec3(0.0f, 0.0f, xoffset);
+		camera_direction += glm::vec3(0.0f, 0.0f, xoffset);
+		std::cout << "Camera at (" << camera_position.x << "," << camera_position.y << "," << camera_position.z << ")" << std::endl;
+	}
+
+	if (cameraZoomingEnabled)
+	{
+		std::cout << "yoffset " << yoffset << std::endl;
+		// move the camera closer to its current direction
+		if(yoffset < 0)
+			camera_position -= glm::cross(camera_up, camera_direction) * 0.05f;
+		else
+			camera_position += glm::cross(camera_up, camera_direction) * 0.05f;
+		std::cout << "Camera at (" << camera_position.x << "," << camera_position.y << "," << camera_position.z << ")" << std::endl;
+	}
+
+	if (cameraTiltingEnabled)
+	{
+
+	}
 }
 
 /*
-	This is called whenever the window has been resized via GLFW.
+	This is called whenever a mouse button has been pressed/released via GLFW.
 */
 void mouse_button_callback(GLFWwindow *_window, int button, int action, int mods)
 {
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
 	{
 		std::cout << "Left Mouse pressed." << std::endl;
-		zoomEnabled = true;
+		cameraZoomingEnabled = true;
 	}
 	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
 	{
 		std::cout << "Left Mouse released." << std::endl;
-		zoomEnabled = false;
+		cameraZoomingEnabled = false;
 	}
 	else if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS)
 	{
 		std::cout << "Middle Mouse pressed." << std::endl;
-		cameraTiltingY = true;
+		cameraTiltingEnabled = true;
 	}
 	else if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_RELEASE)
 	{
 		std::cout << "Middle Mouse released." << std::endl;
-		cameraTiltingY = false;
+		cameraTiltingEnabled = false;
 	}
 	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
 	{
 		std::cout << "Right Mouse pressed." << std::endl;
-		cameraPanningX = true;
+		cameraPanningEnabled = true;
 	}
 	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
 	{
 		std::cout << "Right Mouse released." << std::endl;
-		cameraPanningX = false;
+		cameraPanningEnabled = false;
 	}
 }
 
@@ -299,6 +337,8 @@ int init()
 
 int main()
 {
+	//gridWidth = 20;
+	///*
 	while (true)
 	{
 		std:cout << "Please enter a positive integer ( 2 <= size <= 100) for the grid size: ";
@@ -309,6 +349,7 @@ int main()
 		else
 			break;
 	}
+	//*/
 
 	if (init() == 1)
 	{
@@ -564,9 +605,6 @@ int main()
 	GLuint viewMatrixLoc = glGetUniformLocation(shaderProgram, "view_matrix");
 	GLuint transformLoc = glGetUniformLocation(shaderProgram, "model_matrix");
 
-	camera_position = glm::vec3(0.0f, 10.0f, 0.0f);
-	triangle_scale = glm::vec3(1.0f);
-
 	axisTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 	pacmanWorldTranslationVector = glm::vec3(0.0f, 0.0f, 0.0f);
 
@@ -579,6 +617,13 @@ int main()
 	glm::mat4 gridLocalTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-(GLfloat) gridWidth / 2.0f, 0.0f, -(GLfloat) gridWidth / 2.0f));
 
 	glm::mat4 pacmanCorrectionRotationMatrix = glm::rotate(glm::mat4(1.0f), 0.0f ,glm::vec3(1.0f, 0.0f, 0.0f)); //1.571 radians is 90 degrees
+
+	// Camera Defaults
+	camera_position = glm::vec3(0.0f, 25.0f, 0.0f);
+	camera_direction = glm::vec3(0.0f);
+	camera_up = glm::vec3(1.0f, 0.0f, 0.0f);
+
+	triangle_scale = glm::vec3(1.0f);
 
 	// Temp objects
 	glm::mat4 model_matrixLocal;
@@ -610,7 +655,7 @@ int main()
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-		view_matrix = glm::lookAt(camera_position, camera_direction, glm::vec3(1.0f, 0.0f, 0.0f));//UP);
+		view_matrix = glm::lookAt(camera_position, camera_direction, camera_up);
 		model_matrix = glm::scale(model_matrix, triangle_scale);
 
 		// Render
@@ -631,7 +676,7 @@ int main()
 		glDrawArrays(GL_LINES, 0, points.size());
 
 		glBindVertexArray(VAO_axis);
-		model_matrix = axisTransform * worldRotation;
+		model_matrix = axisTransform;// *worldRotation;
 		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(model_matrix));
 		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
 		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
