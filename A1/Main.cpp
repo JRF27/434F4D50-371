@@ -57,6 +57,10 @@ glm::mat4 axisTransform;
 // Rotations
 glm::mat4 worldRotation;
 
+std::vector<glm::vec3> allGridPoints;
+std::vector<glm::vec3> sphereTransforms;
+std::vector<bool> hiddenSphereTransforms;
+
 bool cameraZoomingEnabled = false;
 bool cameraPanningEnabled = false;
 bool cameraTiltingEnabled = false;
@@ -148,9 +152,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			std::cout << "Reset world rotation." << std::endl;
 			worldRotation = glm::mat4(1.0f);
 			// Reset Camera
-			camera_position = glm::vec3(10.0f, 3.0f, 0.0f);
+			camera_position = glm::vec3(0.0f, 25.0f, 0.0f);
 			camera_direction = glm::vec3(0.0f);
-			camera_up = UP;
+			camera_up = glm::vec3(1.0f, 0.0f, 0.0f);
 			break;
 		case GLFW_KEY_P:
 			std::cout << "Rendered as Points." << std::endl;
@@ -340,6 +344,46 @@ int init()
 	}
 
 	return 1;
+}
+
+void defaults()
+{
+	// Camera Defaults
+	camera_position = glm::vec3(0.0f, 25.0f, 0.0f);
+	camera_direction = glm::vec3(0.0f);
+	camera_up = glm::vec3(1.0f, 0.0f, 0.0f);
+
+	// Starting position
+	pacmanWorldTranslationVector = glm::vec3(0.0f);
+	pacmanLocalRotationMatrix = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+
+	// Default Scale
+	triangle_scale = glm::vec3(1.0f);
+
+	// Randomness
+	allGridPoints.clear();
+	for (int x = 0; x <= gridWidth; x++)
+		for (int z = 0; z <= gridWidth; z++)
+			allGridPoints.push_back(glm::vec3(x - gridWidth / 2.0f, 0, z - gridWidth / 2.0f));
+
+	// Shuffle the grid points so their order is somewhat random
+	std::random_shuffle(allGridPoints.begin(), allGridPoints.end());
+
+	sphereTransforms.clear();
+	hiddenSphereTransforms.clear();
+	for (int i = 0; i < SPHERE_NUMBER; i++)
+	{
+		sphereTransforms.push_back(allGridPoints.at(i));
+		hiddenSphereTransforms.push_back(false);
+	}
+
+	enemyWorldTranslationVectors.clear();
+	enemyLocalRotationMatrix.clear();
+	for (int i = 0; i < enemies; i++)
+	{
+		enemyWorldTranslationVectors.push_back(allGridPoints.at(SPHERE_NUMBER + i));
+		enemyLocalRotationMatrix.push_back(glm::mat4(1.0f));
+	}
 }
 
 int main()
@@ -658,44 +702,20 @@ int main()
 
 	glm::mat4 pacmanCorrectionRotationMatrix = glm::rotate(glm::mat4(1.0f), 0.0f ,glm::vec3(1.0f, 0.0f, 0.0f)); //1.571 radians is 90 degrees
 
-	// Camera Defaults
-	camera_position = glm::vec3(0.0f, 25.0f, 0.0f);
-	camera_direction = glm::vec3(0.0f);
-	camera_up = glm::vec3(1.0f, 0.0f, 0.0f);
-
-	triangle_scale = glm::vec3(1.0f);
+	// Position the transforms of the objects
+	defaults();
 
 	// Temp objects
 	glm::mat4 model_matrixLocal;
 	glm::mat4 model_matrix;
-
-	// Randomness
-	std::vector<glm::vec3> allGridPoints;
-	for (int x = 0; x <= gridWidth; x++)
-		for (int z = 0; z <= gridWidth; z++)
-			allGridPoints.push_back(glm::vec3(x - gridWidth / 2.0f, 0, z - gridWidth / 2.0f));
-
-	std::random_shuffle(allGridPoints.begin(), allGridPoints.end());
-
-	std::vector<glm::vec3> sphereTransforms;
-	std::vector<bool> hiddenSphereTransforms;
-	for (int i = 0; i < SPHERE_NUMBER; i++)
-	{
-		sphereTransforms.push_back(allGridPoints.at(i));
-		hiddenSphereTransforms.push_back(false);
-	}
-
-	for (int i = 0; i < enemies; i++)
-	{
-		enemyWorldTranslationVectors.push_back(allGridPoints.at(SPHERE_NUMBER + i));
-		enemyLocalRotationMatrix.push_back(glm::mat4(1.0f));
-	}
 
 	// subbanding
 	float64 counter = 0;
 	float64 delta = 0;
 	float64 currentTime = 0;
 
+	// Enemies
+	bool isDead = false;
 	int choice = 0;
 
 	// Game loop
@@ -761,7 +781,7 @@ int main()
 				do {
 					choice = rand() % 4;
 					std::cout << "choice: " << choice << std::endl;
-
+					movement = glm::vec3(0.0f);
 					switch (choice)
 					{
 						case(0):
@@ -790,8 +810,26 @@ int main()
 					}
 					else
 					{
-						enemyWorldTranslationVectors.at(i) += movement;
-						invalid = false;
+						float currentDistance = glm::distance(enemyWorldTranslationVectors.at(i), pacmanWorldTranslationVector);
+						float newDistance = glm::distance(enemyWorldTranslationVectors.at(i) + movement, pacmanWorldTranslationVector);
+
+						if (currentDistance == 0)
+						{
+							std::cout << "cannot get closer than this!" << std::endl;
+							enemyWorldTranslationVectors.at(i) += movement;
+							isDead = true;
+							break;
+						}
+
+						if (currentDistance < newDistance)
+						{
+							invalid = true;
+						}
+						else
+						{
+							enemyWorldTranslationVectors.at(i) += movement;
+							invalid = false;
+						}
 					}
 
 				} while(invalid);
@@ -808,6 +846,14 @@ int main()
 			glDrawArrays(GL_TRIANGLES, 0, vertices3.size());
 		}
 
+		if (isDead == true)
+		{
+			std::cout << "Time to restart!" << std::endl;
+			defaults();
+			isDead = false;
+		}
+
+		// Pacman
 		glBindVertexArray(VAO_pacman);
 		model_matrixLocal = pacmanLocalTranslateMatrix * pacmanLocalRotationMatrix * pacmanCorrectionRotationMatrix * pacmanLocalScaleMatrix;
 		model_matrix = worldRotation * glm::translate(glm::mat4(1.0f), pacmanWorldTranslationVector) * glm::scale(model_matrixLocal, triangle_scale);
