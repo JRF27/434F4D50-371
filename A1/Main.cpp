@@ -15,6 +15,10 @@
 
 using namespace std;
 
+typedef uint32_t uint32;
+typedef float float32;
+typedef double float64;
+
 // Constants
 const GLuint WIDTH = 800;
 const GLuint HEIGHT = 800;
@@ -30,6 +34,7 @@ enum PacmanDirection { left, right, up, down };
 
 // Globals
 int gridWidth = 2;
+int enemies = 3;
 glm::vec3 triangle_scale;
 
 glm::vec3 camera_position;
@@ -38,6 +43,7 @@ glm::vec3 camera_up;
 
 PacmanDirection currentDirection = up;
 glm::mat4 pacmanLocalRotationMatrix;
+vector<glm::mat4> enemyLocalRotationMatrix;
 
 // Recipe: projection_matrix * view_matrix * model_matrix
 glm::mat4 projection_matrix;
@@ -45,6 +51,7 @@ glm::mat4 view_matrix;
 
 // Transforms
 glm::vec3 pacmanWorldTranslationVector;
+vector<glm::vec3> enemyWorldTranslationVectors;
 glm::mat4 axisTransform;
 
 // Rotations
@@ -597,6 +604,37 @@ int main()
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(1);
 
+	// Object 5
+	std::vector<glm::vec3> vertices3;
+	std::vector<glm::vec3> normals3;
+	std::vector<glm::vec2> UVs3;
+	loadOBJ("teapot.obj", false, vertices3, normals3, UVs3); //read the vertices from the .obj file
+
+	std::vector<glm::vec3> colorsTeapot;
+	for (int i = 0; i < vertices3.size(); i++)
+	{
+		colorsTeapot.push_back(glm::vec3(0.0f, 1.0f, 1.0f));
+	}
+
+	GLuint VAO_teapot;
+	GLuint verticesTeapot_VBO;
+	GLuint colorsTeapot_VBO;
+
+	glGenVertexArrays(1, &VAO_teapot);		// Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
+	glGenBuffers(1, &verticesTeapot_VBO);	//
+
+	glBindVertexArray(VAO_teapot);
+	glBindBuffer(GL_ARRAY_BUFFER, verticesTeapot_VBO);
+	glBufferData(GL_ARRAY_BUFFER, vertices3.size() * sizeof(glm::vec3), &vertices3.front(), GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(0);
+
+	glGenBuffers(1, &colorsTeapot_VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, colorsTeapot_VBO);
+	glBufferData(GL_ARRAY_BUFFER, colorsTeapot.size() * sizeof(glm::vec3), &colorsTeapot.front(), GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(1);
+
 	glBindBuffer(GL_ARRAY_BUFFER, 0);	// Unbind VBO
 	glBindVertexArray(0);				// Unbind VAO (it's always a good thing to unbind any buffer/array to prevent strange bugs)
 
@@ -611,9 +649,11 @@ int main()
 	// Scales
 	glm::mat4 pacmanLocalScaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.045f, 0.045f, 0.045f));
 	glm::mat4 sphereLocalScaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.5f, 0.5f, 0.5f));
+	glm::mat4 teapotLocalScaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.8f, 0.8f, 0.8f));
 
 	glm::mat4 pacmanLocalTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 	glm::mat4 sphereLocalTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+	glm::mat4 teapotLocalTransformMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 	glm::mat4 gridLocalTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-(GLfloat) gridWidth / 2.0f, 0.0f, -(GLfloat) gridWidth / 2.0f));
 
 	glm::mat4 pacmanCorrectionRotationMatrix = glm::rotate(glm::mat4(1.0f), 0.0f ,glm::vec3(1.0f, 0.0f, 0.0f)); //1.571 radians is 90 degrees
@@ -645,11 +685,26 @@ int main()
 		hiddenSphereTransforms.push_back(false);
 	}
 
+	for (int i = 0; i < enemies; i++)
+	{
+		enemyWorldTranslationVectors.push_back(allGridPoints.at(SPHERE_NUMBER + i));
+		enemyLocalRotationMatrix.push_back(glm::mat4(1.0f));
+	}
+
+	// subbanding
+	float64 counter = 0;
+	float64 delta = 0;
+	float64 currentTime = 0;
+
+	int choice = 0;
+
 	// Game loop
 	while (!glfwWindowShouldClose(window))
 	{
 		// Check if any events have been activiated (key pressed, mouse moved etc.) and call corresponding response functions
 		glfwPollEvents();
+
+		currentTime = glfwGetTime();
 
 		// Clear the colorbuffer
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -659,14 +714,6 @@ int main()
 		model_matrix = glm::scale(model_matrix, triangle_scale);
 
 		// Render
-		glBindVertexArray(VAO_pacman);
-		model_matrixLocal = pacmanLocalTranslateMatrix * pacmanLocalRotationMatrix * pacmanCorrectionRotationMatrix * pacmanLocalScaleMatrix;
-		model_matrix = worldRotation * glm::translate(glm::mat4(1.0f), pacmanWorldTranslationVector) * glm::scale(model_matrixLocal, triangle_scale);
-		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(model_matrix));
-		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
-		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
-		glDrawArrays(GL_TRIANGLES, 0, vertices.size());
-
 		glBindVertexArray(VAO_lines);
 		model_matrixLocal = gridLocalTranslateMatrix;
 		model_matrix = worldRotation * model_matrixLocal;
@@ -701,6 +748,73 @@ int main()
 				glDrawArrays(GL_TRIANGLES, 0, vertices2.size());
 			}
 		}
+
+		delta = glfwGetTime() - currentTime;
+		counter += delta;
+		if (counter >= 1)
+		{
+			counter = 0;
+			for (int i = 0; i < enemies; i++)
+			{
+				bool invalid = false;
+				glm::vec3 movement;
+				do {
+					choice = rand() % 4;
+					std::cout << "choice: " << choice << std::endl;
+
+					switch (choice)
+					{
+						case(0):
+							movement += glm::vec3(-1.0f, 0.0f, 0.0f);
+							enemyLocalRotationMatrix.at(i) = glm::rotate(glm::mat4(1.0f), 2*1.571f, glm::vec3(0.0f, 1.0f, 0.0f));
+							break;
+						case(1):
+							movement += glm::vec3(1.0f, 0.0f, 0.0f);
+							enemyLocalRotationMatrix.at(i) = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+							break;
+						case(2):
+							movement += glm::vec3(0.0f, 0.0f, -1.0f);
+							enemyLocalRotationMatrix.at(i) = glm::rotate(glm::mat4(1.0f), 1.571f, glm::vec3(0.0f, 1.0f, 0.0f));
+							break;
+						case(3):
+							movement += glm::vec3(0.0f, 0.0f, 1.0f);
+							enemyLocalRotationMatrix.at(i) = glm::rotate(glm::mat4(1.0f), -1.571f, glm::vec3(0.0f, 1.0f, 0.0f));
+							break;
+					}
+					std::cout << enemyWorldTranslationVectors.at(i).x << "," << enemyWorldTranslationVectors.at(i).z << std::endl;
+
+					if (glm::abs(enemyWorldTranslationVectors.at(i).x + movement.x) > (gridWidth / 2.0f) ||
+						glm::abs(enemyWorldTranslationVectors.at(i).z + movement.z) > (gridWidth / 2.0f))
+					{
+						invalid = true;
+					}
+					else
+					{
+						enemyWorldTranslationVectors.at(i) += movement;
+						invalid = false;
+					}
+
+				} while(invalid);
+			}
+		}
+		for (int i = 0; i < enemies; i++)
+		{
+			glBindVertexArray(VAO_teapot);
+			model_matrixLocal = teapotLocalTransformMatrix * enemyLocalRotationMatrix.at(i) * teapotLocalScaleMatrix;
+			model_matrix = worldRotation * glm::translate(glm::mat4(1.0f), enemyWorldTranslationVectors.at(i)) * glm::scale(model_matrixLocal, triangle_scale);
+			glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(model_matrix));
+			glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
+			glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
+			glDrawArrays(GL_TRIANGLES, 0, vertices3.size());
+		}
+
+		glBindVertexArray(VAO_pacman);
+		model_matrixLocal = pacmanLocalTranslateMatrix * pacmanLocalRotationMatrix * pacmanCorrectionRotationMatrix * pacmanLocalScaleMatrix;
+		model_matrix = worldRotation * glm::translate(glm::mat4(1.0f), pacmanWorldTranslationVector) * glm::scale(model_matrixLocal, triangle_scale);
+		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(model_matrix));
+		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
+		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
+		glDrawArrays(GL_TRIANGLES, 0, vertices.size());
 
 		glBindVertexArray(0);
 
