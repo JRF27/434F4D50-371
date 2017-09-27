@@ -189,7 +189,7 @@ void window_resize_callback(GLFWwindow *_window, int width, int height)
 {
 	std::cout << "Resized! " << width << "x" << height << "." << std::endl;
 	glViewport(0, 0, width, height);
-	projection_matrix = glm::perspective(45.0f, (GLfloat)width / (GLfloat)height, 0.0f, 100.0f);
+	projection_matrix = glm::perspective(45.0f, (GLfloat)width / (GLfloat)height, 0.1f, 100.0f);
 }
 
 /**
@@ -332,7 +332,7 @@ int init()
 		GL_GEQUAL	Passes if the fragment's depth value is greater than or equal to the stored depth value.
 	*/
 	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LEQUAL);
+	glDepthFunc(GL_LESS);
 
 	// Set this to true so GLEW knows to use a modern approach to retrieving function pointers and extensions
 	glewExperimental = GL_TRUE;
@@ -412,7 +412,7 @@ int main()
 	glfwGetFramebufferSize(window, &width, &height);
 
 	glViewport(0, 0, width, height);
-	projection_matrix = glm::perspective(45.0f, (GLfloat) width / (GLfloat) height, 0.0f, 100.0f);
+	projection_matrix = glm::perspective(45.0f, (GLfloat) width / (GLfloat) height, 0.1f, 100.0f);
 
 	/*
 		Start of Shaders
