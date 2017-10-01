@@ -58,11 +58,13 @@ std::vector<glm::vec3> allGridPoints;
 std::vector<glm::vec3> sphereTransforms;
 std::vector<bool> hiddenSphereTransforms;
 
+glm::vec2 lastMousePoint = glm::vec2(WIDTH / 2, HEIGHT / 2);
 bool cameraZoomingEnabled = false;
 bool cameraPanningEnabled = false;
 bool cameraTiltingEnabled = false;
 GLFWwindow* window;
 
+// Function prototypes
 void resetCamera();
 
 /**
@@ -182,8 +184,6 @@ void error_callback(int error, const char* description)
 {
 	fputs(description, stderr);
 }
-
-glm::vec2 lastMousePoint = glm::vec2(WIDTH/2, HEIGHT/2);
 
 /*
 	This is called whenever the mouse's cursor position has changed via GLFW.
@@ -323,7 +323,7 @@ int init()
 
 void resetCamera()
 {
-	cameraPosition = glm::vec3(0.0f, 10.0f, 0.0f);
+	cameraPosition = glm::vec3(0.0f, 25.0f, 0.0f);
 	cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
 	cameraUp = glm::vec3(0.0f, 0.0f, 1.0f);
 }
@@ -689,31 +689,108 @@ int main()
 	glm::mat4 model_matrixLocal;
 	glm::mat4 model_matrix;
 
-	// subbanding
-	float64 counter = 0;
-	float64 delta = 0;
-	float64 currentTime = 0;
-
 	// Enemies
 	bool isDead = false;
 	int choice = 0;
 
-	// Game loop
-	while (!glfwWindowShouldClose(window))
-	{
-		// Check if any events have been activiated (key pressed, mouse moved etc.) and call corresponding response functions
-		glfwPollEvents();
+	// FPS
+	uint32 frames = 0;
+	float64 counter = 0;
+	float64 delta = 0;
+	float64 currentTime = 0;
 
-		currentTime = glfwGetTime();
+	while (!glfwWindowShouldClose(window)) {
+		glfwPollEvents();					// Check if any events have been activiated (key pressed, mouse moved etc.) and call corresponding response functions
 
-		// Clear the colorbuffer
+		currentTime = glfwGetTime();		//
+
+		// Update Logic
+		for (int i = 0; i < enemies; i++)
+		{
+			if (!(frames % 30 == 0))
+				break;
+
+			bool invalid = false;
+			glm::vec3 movement;
+			do {
+				choice = rand() % 4;
+				std::cout << "choice: " << choice << std::endl;
+				movement = glm::vec3(0.0f);
+				switch (choice)
+				{
+				case(0):
+					movement += glm::vec3(-1.0f, 0.0f, 0.0f);
+					enemyLocalRotationMatrix.at(i) = glm::rotate(glm::mat4(1.0f), 2 * 1.571f, glm::vec3(0.0f, 1.0f, 0.0f));
+					break;
+				case(1):
+					movement += glm::vec3(1.0f, 0.0f, 0.0f);
+					enemyLocalRotationMatrix.at(i) = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+					break;
+				case(2):
+					movement += glm::vec3(0.0f, 0.0f, -1.0f);
+					enemyLocalRotationMatrix.at(i) = glm::rotate(glm::mat4(1.0f), 1.571f, glm::vec3(0.0f, 1.0f, 0.0f));
+					break;
+				case(3):
+					movement += glm::vec3(0.0f, 0.0f, 1.0f);
+					enemyLocalRotationMatrix.at(i) = glm::rotate(glm::mat4(1.0f), -1.571f, glm::vec3(0.0f, 1.0f, 0.0f));
+					break;
+				}
+				std::cout << enemyWorldTranslationVectors.at(i).x << "," << enemyWorldTranslationVectors.at(i).z << std::endl;
+
+				if (glm::abs(enemyWorldTranslationVectors.at(i).x + movement.x) > (gridWidth / 2.0f) ||
+					glm::abs(enemyWorldTranslationVectors.at(i).z + movement.z) > (gridWidth / 2.0f))
+				{
+					invalid = true;
+				}
+				else
+				{
+					float currentDistance = glm::distance(enemyWorldTranslationVectors.at(i), pacmanWorldTranslationVector);
+					float newDistance = glm::distance(enemyWorldTranslationVectors.at(i) + movement, pacmanWorldTranslationVector);
+
+					if (currentDistance == 0)
+					{
+						std::cout << "cannot get closer than this!" << std::endl;
+						enemyWorldTranslationVectors.at(i) += movement;
+						isDead = true;
+						break;
+					}
+
+					if (currentDistance < newDistance)
+					{
+						invalid = true;
+					}
+					else
+					{
+						enemyWorldTranslationVectors.at(i) += movement;
+						invalid = false;
+					}
+				}
+
+			} while (invalid);
+		}
+
+		// check if it needs to be hidden
+		for (int i = 0; i < sphereTransforms.size(); i++)
+		{
+			if ((sphereTransforms.at(i).x == pacmanWorldTranslationVector.x) && (sphereTransforms.at(i).z == pacmanWorldTranslationVector.z))
+				hiddenSphereTransforms.at(i) = true;
+		}
+
+		if (isDead == true)
+		{
+			std::cout << "Time to restart!" << std::endl;
+			defaults();
+			isDead = false;
+		}
+		
+		// Render Logic
+
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
 		view_matrix = glm::lookAt(cameraPosition, cameraTarget, cameraUp);
 		model_matrix = glm::scale(model_matrix, triangle_scale);
 
-		// Render
 		glBindVertexArray(VAO_lines);
 		model_matrixLocal = gridLocalTranslateMatrix;
 		model_matrix = worldRotation * model_matrixLocal;
@@ -731,12 +808,7 @@ int main()
 
 		for (int i = 0; i < sphereTransforms.size(); i++)
 		{
-			// check if it needs to be hidden
-			if ((sphereTransforms.at(i).x == pacmanWorldTranslationVector.x) && (sphereTransforms.at(i).z == pacmanWorldTranslationVector.z))
-				hiddenSphereTransforms.at(i) = true;
-
 			// if it is not hidden then render it
-
 			if (!hiddenSphereTransforms.at(i))
 			{
 				glBindVertexArray(VAO_sphere);
@@ -749,72 +821,6 @@ int main()
 			}
 		}
 
-		delta = glfwGetTime() - currentTime;
-		counter += delta *4;
-		if (counter >= 1)
-		{
-			counter = 0;
-			for (int i = 0; i < enemies; i++)
-			{
-				bool invalid = false;
-				glm::vec3 movement;
-				do {
-					choice = rand() % 4;
-					std::cout << "choice: " << choice << std::endl;
-					movement = glm::vec3(0.0f);
-					switch (choice)
-					{
-						case(0):
-							movement += glm::vec3(-1.0f, 0.0f, 0.0f);
-							enemyLocalRotationMatrix.at(i) = glm::rotate(glm::mat4(1.0f), 2*1.571f, glm::vec3(0.0f, 1.0f, 0.0f));
-							break;
-						case(1):
-							movement += glm::vec3(1.0f, 0.0f, 0.0f);
-							enemyLocalRotationMatrix.at(i) = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-							break;
-						case(2):
-							movement += glm::vec3(0.0f, 0.0f, -1.0f);
-							enemyLocalRotationMatrix.at(i) = glm::rotate(glm::mat4(1.0f), 1.571f, glm::vec3(0.0f, 1.0f, 0.0f));
-							break;
-						case(3):
-							movement += glm::vec3(0.0f, 0.0f, 1.0f);
-							enemyLocalRotationMatrix.at(i) = glm::rotate(glm::mat4(1.0f), -1.571f, glm::vec3(0.0f, 1.0f, 0.0f));
-							break;
-					}
-					std::cout << enemyWorldTranslationVectors.at(i).x << "," << enemyWorldTranslationVectors.at(i).z << std::endl;
-
-					if (glm::abs(enemyWorldTranslationVectors.at(i).x + movement.x) > (gridWidth / 2.0f) ||
-						glm::abs(enemyWorldTranslationVectors.at(i).z + movement.z) > (gridWidth / 2.0f))
-					{
-						invalid = true;
-					}
-					else
-					{
-						float currentDistance = glm::distance(enemyWorldTranslationVectors.at(i), pacmanWorldTranslationVector);
-						float newDistance = glm::distance(enemyWorldTranslationVectors.at(i) + movement, pacmanWorldTranslationVector);
-
-						if (currentDistance == 0)
-						{
-							std::cout << "cannot get closer than this!" << std::endl;
-							enemyWorldTranslationVectors.at(i) += movement;
-							isDead = true;
-							break;
-						}
-
-						if (currentDistance < newDistance)
-						{
-							invalid = true;
-						}
-						else
-						{
-							enemyWorldTranslationVectors.at(i) += movement;
-							invalid = false;
-						}
-					}
-
-				} while(invalid);
-			}
-		}
 		for (int i = 0; i < enemies; i++)
 		{
 			glBindVertexArray(VAO_teapot);
@@ -826,14 +832,6 @@ int main()
 			glDrawArrays(GL_TRIANGLES, 0, vertices3.size());
 		}
 
-		if (isDead == true)
-		{
-			std::cout << "Time to restart!" << std::endl;
-			defaults();
-			isDead = false;
-		}
-
-		// Pacman
 		glBindVertexArray(VAO_pacman);
 		model_matrixLocal = pacmanLocalTranslateMatrix * pacmanLocalRotationMatrix * pacmanCorrectionRotationMatrix * pacmanLocalScaleMatrix;
 		model_matrix = worldRotation * glm::translate(glm::mat4(1.0f), pacmanWorldTranslationVector) * glm::scale(model_matrixLocal, triangle_scale);
@@ -844,8 +842,20 @@ int main()
 
 		glBindVertexArray(0);
 
-		// Swap the screen buffers
+		// FPS
+
 		glfwSwapBuffers(window);
+		delta = glfwGetTime() - currentTime;
+
+		counter += delta;
+		if (counter >= 1) {
+			counter = 0;
+			std::cout << "FPS: " << frames << std::endl;
+			frames = 0;
+		}
+		else {
+			frames++;
+		}
 	}
 
 	// Terminate GLFW, clearing any resources allocated by GLFW.
