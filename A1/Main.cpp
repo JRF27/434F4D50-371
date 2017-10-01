@@ -29,19 +29,16 @@ const GLfloat SCALE_FACTOR = 0.05f;
 const glm::vec3 ORIGIN(0.0f, 0.0f, 0.0f);
 const glm::vec3 UP(0.0f, 1.0f, 0.0f);
 
-// Enums
-enum PacmanDirection { left, right, up, down };
 
 // Globals
 int gridWidth = 2;
 int enemies = 3;
 glm::vec3 triangle_scale;
 
-glm::vec3 camera_position;
-glm::vec3 camera_direction;
-glm::vec3 camera_up;
+glm::vec3 cameraPosition;
+glm::vec3 cameraTarget;
+glm::vec3 cameraUp;
 
-PacmanDirection currentDirection = up;
 glm::mat4 pacmanLocalRotationMatrix;
 vector<glm::mat4> enemyLocalRotationMatrix;
 
@@ -65,6 +62,8 @@ bool cameraZoomingEnabled = false;
 bool cameraPanningEnabled = false;
 bool cameraTiltingEnabled = false;
 GLFWwindow* window;
+
+void resetCamera();
 
 /**
 	This is called whenever a key is pressed/released via GLFW.
@@ -98,63 +97,45 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			break;
 		case GLFW_KEY_A:
 			std::cout << "Move Left." << std::endl;
-			pacmanWorldTranslationVector += glm::vec3(0.0f, 0.0f, -1.0f);
-			if (currentDirection != PacmanDirection::left)
-			{
-				currentDirection = PacmanDirection::left;
-				pacmanLocalRotationMatrix = glm::rotate(glm::mat4(1.0f), 1.571f, glm::vec3(0.0f, 1.0f, 0.0f));
-			}
+			pacmanWorldTranslationVector += glm::vec3(1.0f, 0.0f, 0.0f);
+			pacmanLocalRotationMatrix = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 			break;
 		case GLFW_KEY_D:
 			std::cout << "Move Right." << std::endl;
-			pacmanWorldTranslationVector += glm::vec3(0.0f, 0.0f, 1.0f);
-			if (currentDirection != PacmanDirection::right)
-			{
-				currentDirection = PacmanDirection::right;
-				pacmanLocalRotationMatrix = glm::rotate(glm::mat4(1.0f), -1.571f, glm::vec3(0.0f, 1.0f, 0.0f));
-			}
+			pacmanWorldTranslationVector += glm::vec3(-1.0f, 0.0f, 0.0f);
+			pacmanLocalRotationMatrix = glm::rotate(glm::mat4(1.0f), 2 * 1.571f, glm::vec3(0.0f, 1.0f, 0.0f));
 			break;
 		case GLFW_KEY_W:
 			std::cout << "Move Up." << std::endl;
-			pacmanWorldTranslationVector += glm::vec3(1.0f, 0.0f, 0.0f);
-			if (currentDirection != PacmanDirection::up)
-			{
-				currentDirection = PacmanDirection::up;
-				pacmanLocalRotationMatrix = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-			}
+			pacmanWorldTranslationVector += glm::vec3(0.0f, 0.0f, 1.0f);
+			pacmanLocalRotationMatrix = glm::rotate(glm::mat4(1.0f), -1.571f, glm::vec3(0.0f, 1.0f, 0.0f));
 			break;
 		case GLFW_KEY_S:
 			std::cout << "Move Down." << std::endl;
-			pacmanWorldTranslationVector += glm::vec3(-1.0f, 0.0f, 0.0f);
-			if (currentDirection != PacmanDirection::down)
-			{
-				currentDirection = PacmanDirection::down;
-				pacmanLocalRotationMatrix = glm::rotate(glm::mat4(1.0f), 2*1.571f, glm::vec3(0.0f, 1.0f, 0.0f));
-			}
+			pacmanWorldTranslationVector += glm::vec3(0.0f, 0.0f, -1.0f);
+			pacmanLocalRotationMatrix = glm::rotate(glm::mat4(1.0f), 1.571f, glm::vec3(0.0f, 1.0f, 0.0f));
 			break;
 		case GLFW_KEY_LEFT:
 			std::cout << "Rotate world -x." << std::endl;
-			worldRotation *= glm::rotate(glm::mat4(1.0f), SCALE_FACTOR, glm::vec3(1, 0, 0));
+			worldRotation = glm::rotate(worldRotation, SCALE_FACTOR, glm::vec3(1, 0, 0));
 			break;
 		case GLFW_KEY_RIGHT:
 			std::cout << "Rotate world -x." << std::endl;
-			worldRotation *= glm::rotate(glm::mat4(1.0f), -SCALE_FACTOR, glm::vec3(1, 0, 0));
+			worldRotation = glm::rotate(worldRotation, -SCALE_FACTOR, glm::vec3(1, 0, 0));
 			break;
 		case GLFW_KEY_UP:
 			std::cout << "Rotate world y." << std::endl;
-			worldRotation *= glm::rotate(glm::mat4(1.0f), SCALE_FACTOR, glm::vec3(0, 1, 0));
+			worldRotation = glm::rotate(worldRotation, SCALE_FACTOR, glm::vec3(0, 1, 0));
 			break;
 		case GLFW_KEY_DOWN:
 			std::cout << "Rotate world -y." << std::endl;
-			worldRotation *= glm::rotate(glm::mat4(1.0f), -SCALE_FACTOR, glm::vec3(0, 1, 0));
+			worldRotation = glm::rotate(worldRotation, -SCALE_FACTOR, glm::vec3(0, 1, 0));
 			break;
 		case GLFW_KEY_HOME:
 			std::cout << "Reset world rotation." << std::endl;
 			worldRotation = glm::mat4(1.0f);
 			// Reset Camera
-			camera_position = glm::vec3(0.0f, 25.0f, 0.0f);
-			camera_direction = glm::vec3(0.0f);
-			camera_up = glm::vec3(1.0f, 0.0f, 0.0f);
+			resetCamera();
 			break;
 		case GLFW_KEY_P:
 			std::cout << "Rendered as Points." << std::endl;
@@ -222,26 +203,31 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 
 	if (cameraPanningEnabled)
 	{
-		// move the cameras position and direction vectors
-		camera_position += glm::vec3(0.0f, 0.0f, xoffset);
-		camera_direction += glm::vec3(0.0f, 0.0f, xoffset);
-		std::cout << "Camera at (" << camera_position.x << "," << camera_position.y << "," << camera_position.z << ")" << std::endl;
+		cameraPosition += glm::vec3(xoffset * SCALE_FACTOR, 0.0f, 0.0f);
+		cameraTarget += glm::vec3(xoffset * SCALE_FACTOR, 0.0f, 0.0f);
+		//std::cout << "Camera at (" << cameraPosition.x << "," << cameraPosition.y << "," << cameraPosition.z << ")" << std::endl;
+		//std::cout << "Target at (" << cameraTarget.x << "," << cameraTarget.y << "," << cameraTarget.z << ")" << std::endl;
 	}
 
 	if (cameraZoomingEnabled)
 	{
-		std::cout << "yoffset " << yoffset << std::endl;
-		// move the camera closer to its current direction
-		if(yoffset < 0)
-			camera_position -= glm::cross(camera_up, camera_direction) * 0.05f;
-		else
-			camera_position += glm::cross(camera_up, camera_direction) * 0.05f;
-		std::cout << "Camera at (" << camera_position.x << "," << camera_position.y << "," << camera_position.z << ")" << std::endl;
+		cameraPosition += cameraPosition *(yoffset * SCALE_FACTOR);
+		//std::cout << "Camera at (" << cameraPosition.x << "," << cameraPosition.y << "," << cameraPosition.z << ")" << std::endl;
 	}
 
 	if (cameraTiltingEnabled)
 	{
-
+		if (yoffset < 0)
+		{
+			glm::mat4 mat = glm::rotate(glm::mat4(1.0f), 0.05f, glm::vec3(1.0, 0.0, 0.0));
+			cameraPosition = glm::vec3(mat * glm::vec4(cameraPosition, 1.0));
+		}
+		else
+		{
+			glm::mat4 mat = glm::rotate(glm::mat4(1.0f), -0.05f, glm::vec3(1.0, 0.0, 0.0));
+			cameraPosition = glm::vec3(mat * glm::vec4(cameraPosition, 1.0));
+		}
+		//std::cout << "Camera at (" << cameraPosition.x << "," << cameraPosition.y << "," << cameraPosition.z << ")" << std::endl;
 	}
 }
 
@@ -320,19 +306,8 @@ int init()
 	// Blocks swapping until monitor has done at least one vertical draw
 	glfwSwapInterval(1);
 
-	// Z-Buffer
-	/*
-		GL_ALWAYS	The depth test always passes.
-		GL_NEVER	The depth test never passes.
-		GL_LESS		Passes if the fragment's depth value is less than the stored depth value.
-		GL_EQUAL	Passes if the fragment's depth value is equal to the stored depth value.
-		GL_LEQUAL	Passes if the fragment's depth value is less than or equal to the stored depth value.
-		GL_GREATER	Passes if the fragment's depth value is greater than the stored depth value.
-		GL_NOTEQUAL	Passes if the fragment's depth value is not equal to the stored depth value.
-		GL_GEQUAL	Passes if the fragment's depth value is greater than or equal to the stored depth value.
-	*/
 	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
+	glDepthFunc(GL_LESS);		// Passes if the fragment's depth value is less than the stored depth value.
 
 	// Set this to true so GLEW knows to use a modern approach to retrieving function pointers and extensions
 	glewExperimental = GL_TRUE;
@@ -346,12 +321,17 @@ int init()
 	return 1;
 }
 
+void resetCamera()
+{
+	cameraPosition = glm::vec3(0.0f, 10.0f, 0.0f);
+	cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
+	cameraUp = glm::vec3(0.0f, 0.0f, 1.0f);
+}
+
 void defaults()
 {
 	// Camera Defaults
-	camera_position = glm::vec3(0.0f, 25.0f, 0.0f);
-	camera_direction = glm::vec3(0.0f);
-	camera_up = glm::vec3(1.0f, 0.0f, 0.0f);
+	resetCamera();
 
 	// Starting position
 	pacmanWorldTranslationVector = glm::vec3(0.0f);
@@ -730,7 +710,7 @@ int main()
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-		view_matrix = glm::lookAt(camera_position, camera_direction, camera_up);
+		view_matrix = glm::lookAt(cameraPosition, cameraTarget, cameraUp);
 		model_matrix = glm::scale(model_matrix, triangle_scale);
 
 		// Render
@@ -770,7 +750,7 @@ int main()
 		}
 
 		delta = glfwGetTime() - currentTime;
-		counter += delta;
+		counter += delta *4;
 		if (counter >= 1)
 		{
 			counter = 0;
