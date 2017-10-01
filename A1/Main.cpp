@@ -714,7 +714,7 @@ int main()
 			glm::vec3 movement;
 			do {
 				choice = rand() % 4;
-				std::cout << "choice: " << choice << std::endl;
+				//std::cout << "choice: " << choice << std::endl;
 				movement = glm::vec3(0.0f);
 				switch (choice)
 				{
@@ -735,7 +735,8 @@ int main()
 					enemyLocalRotationMatrix.at(i) = glm::rotate(glm::mat4(1.0f), -1.571f, glm::vec3(0.0f, 1.0f, 0.0f));
 					break;
 				}
-				std::cout << enemyWorldTranslationVectors.at(i).x << "," << enemyWorldTranslationVectors.at(i).z << std::endl;
+				
+				//std::cout << enemyWorldTranslationVectors.at(i).x << "," << enemyWorldTranslationVectors.at(i).z << std::endl;
 
 				if (glm::abs(enemyWorldTranslationVectors.at(i).x + movement.x) > (gridWidth / 2.0f) ||
 					glm::abs(enemyWorldTranslationVectors.at(i).z + movement.z) > (gridWidth / 2.0f))
@@ -749,7 +750,7 @@ int main()
 
 					if (currentDistance == 0)
 					{
-						std::cout << "cannot get closer than this!" << std::endl;
+						//std::cout << "cannot get closer than this!" << std::endl;
 						enemyWorldTranslationVectors.at(i) += movement;
 						isDead = true;
 						break;
@@ -778,13 +779,12 @@ int main()
 
 		if (isDead == true)
 		{
-			std::cout << "Time to restart!" << std::endl;
+			//std::cout << "Time to restart!" << std::endl;
 			defaults();
 			isDead = false;
 		}
 		
 		// Render Logic
-
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
@@ -842,11 +842,10 @@ int main()
 
 		glBindVertexArray(0);
 
-		// FPS
-
 		glfwSwapBuffers(window);
-		delta = glfwGetTime() - currentTime;
 
+		// FPS
+		delta = glfwGetTime() - currentTime;
 		counter += delta;
 		if (counter >= 1) {
 			counter = 0;
