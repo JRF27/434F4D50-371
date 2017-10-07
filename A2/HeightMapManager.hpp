@@ -1,17 +1,38 @@
 #ifndef HEIGHTMAPMANAGER_H
 #define HEIGHTMAPMANAGER_H
 
+#include "CImg.h"
+#include "glm.hpp"
+
 class HeightMapManager {
 
 public:
 	HeightMapManager();
 	~HeightMapManager();
 
-	void setSkipSize(int& skipSize) { m_skipSize = skipSize; };
+	int getSkipSize()						{ return m_skipSize; };
+	float getStepSize()						{ return m_stepSize; };
+	std::vector<glm::vec3> getAllPoints()	{ return m_allPoints; };
+
+	void readSkipSize();
+	void readStepSize();
+	void readImage(std::string& fileName);
+	void createAllpoints();
 
 private:
+	void setSkipSize(int& skipSize) { m_skipSize = skipSize; };
+	void setStepSize(float& stepSize) { m_stepSize = stepSize; };
+
 	int m_skipSize;
 	float m_stepSize;
+
+	cimg_library::CImg<unsigned char> m_image;
+	int m_image_width;
+	int m_image_height;
+
+	glm::vec3 m_v3_triangleScale;
+	std::vector<glm::vec3> m_allPoints;
+	std::vector<glm::vec3> m_subPoints;
 };
 
 #endif

@@ -12,7 +12,8 @@
 #include "gtc/matrix_transform.hpp"
 #include "gtc/type_ptr.hpp"
 
-#include "CImg.h"
+#include "HeightMapManager.hpp"
+#include "ShaderProgram.hpp"
 
 using namespace std;
 
@@ -23,15 +24,11 @@ typedef double float64;
 // Constants
 const GLuint WIDTH = 800;
 const GLuint HEIGHT = 800;
-const int SKIPMIN = 2;
-const int SKIPMAX = 100;
 
 const int AXIS_LENGTH = 4;
-const int SPHERE_NUMBER = 8;
 const GLfloat SCALE_FACTOR = 0.05f;
 const glm::vec3 ORIGIN(0.0f, 0.0f, 0.0f);
 const glm::vec3 UP(0.0f, 1.0f, 0.0f);
-
 
 // Globals
 glm::vec3 cameraPosition;
@@ -122,8 +119,6 @@ void window_resize_callback(GLFWwindow *_window, int width, int height)
 
 /**
 	This is called whenever there is an error via GLFW.
-
-	Source: Lecture 03
 */
 void error_callback(int error, const char* description)
 {
@@ -281,60 +276,15 @@ void defaults()
 
 int main()
 {
-	cimg_library::CImg<unsigned char> src("depth.bmp");
+	HeightMapManager* heightMapManager = new HeightMapManager();
+	std::string fileName = "depth.bmp";
+	heightMapManager->readImage(fileName);
+	heightMapManager->readSkipSize();
+	heightMapManager->readStepSize();
+	heightMapManager->createAllpoints();
 
-	/*
-	cimg_library::CImg<unsigned char> src(640, 400, 1, 3);  // Define a 640x400 color image with 8 bits per color component.
-	src.fill(0);                           // Set pixel values to 0 (color : black)
-	unsigned char purple[] = { 255,0,255 };        // Define a purple color
-	src.draw_text(100, 100, "Hello World", purple); // Draw a purple "Hello world" at coordinates (100,100).
-	src.display("My first CImg code");
-	*/
-	int widthImage = src.width();
-	int heightImage = src.height();
-
-	std::cout << "Image size is " << widthImage << " x " << heightImage << std::endl;
-
-	bool isGrayScale = true;
-	std::vector<glm::vec3> allPoints;
+	std::vector<glm::vec3> allPoints = heightMapManager->getAllPoints();
 	std::vector<glm::vec3> subPoints;
-
-	int skipSize;
-	while (true)
-	{
-		std::cout << "Please enter a skip-size integer (" << SKIPMIN << " <= skip-size <= " << SKIPMAX << "): ";
-		scanf_s("%d", &skipSize);
-		std::cout << "Entered... " << skipSize << std::endl;
-		if (skipSize < SKIPMIN || skipSize > SKIPMAX)
-			continue;
-		else
-			break;
-	}
-
-	for (int r = 0; r < heightImage; r++)
-	{
-		for (int c = 0; c < widthImage; c++)
-		{
-			// Point Cloud
-			glm::vec3 currentColor = glm::vec3((int)src(c, r, 0, 0), (int)src(c, r, 0, 1), (int)src(c, r, 0, 2));
-			//cout << "(" << r << "," << c << ") =" << " R" << (int)src(c, r, 0, 0) << " G" << (int)src(c, r, 0, 1) << " B" << (int)src(c, r, 0, 2) << endl;
-			if (isGrayScale)
-				allPoints.push_back(glm::vec3(r, currentColor.x, c));
-			else
-				allPoints.push_back(glm::vec3(r, glm::length(currentColor), c));
-
-			// Subset of points
-			if (c % skipSize == 0)
-				subPoints.push_back(allPoints.back());
-		}
-	}
-
-	/*
-	float stepSize;
-	std::cout << "Please enter a step-size integer: ";
-	scanf_s("%f", &stepSize);
-	std::cout << "Entered... " << skipSize << std::endl;
-	*/
 
 	if (init() == 1)
 	{
@@ -348,91 +298,8 @@ int main()
 	glViewport(0, 0, width, height);
 	projection_matrix = glm::perspective(45.0f, (GLfloat) width / (GLfloat) height, 0.1f, 500.0f);
 
-	/*
-		Start of Shaders
-	*/
-
-	// Build and compile our shader program
-	// Vertex shader
-
-	// Read the Vertex Shader code from the file
-	string vertex_shader_path = "vertex.shader";
-	string VertexShaderCode;
-	std::ifstream VertexShaderStream(vertex_shader_path, ios::in);
-
-	if (VertexShaderStream.is_open())
-	{
-		string Line = "";
-		while (getline(VertexShaderStream, Line))
-			VertexShaderCode += "\n" + Line;
-		VertexShaderStream.close();
-	}
-	else
-	{
-		printf("Impossible to open %s. Are you in the right directory ?\n", vertex_shader_path.c_str());
-		getchar();
-		exit(-1);
-	}
-
-	// Read the Fragment Shader code from the file
-	string fragment_shader_path = "fragment.shader";
-	std::string FragmentShaderCode;
-	std::ifstream FragmentShaderStream(fragment_shader_path, std::ios::in);
-
-	if (FragmentShaderStream.is_open())
-	{
-		std::string Line = "";
-		while (getline(FragmentShaderStream, Line))
-			FragmentShaderCode += "\n" + Line;
-		FragmentShaderStream.close();
-	}
-	else
-	{
-		printf("Impossible to open %s. Are you in the right directory?\n", fragment_shader_path.c_str());
-		getchar();
-		exit(-1);
-	}
-
-	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	char const * VertexSourcePointer = VertexShaderCode.c_str();
-	glShaderSource(vertexShader, 1, &VertexSourcePointer, NULL);
-	glCompileShader(vertexShader);
-	// Check for compile time errors
-	GLint success;
-	GLchar infoLog[512];
-	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-	if (!success)
-	{
-		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-	}
-	// Fragment shader
-	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	char const * FragmentSourcePointer = FragmentShaderCode.c_str();
-	glShaderSource(fragmentShader, 1, &FragmentSourcePointer, NULL);
-	glCompileShader(fragmentShader);
-	// Check for compile time errors
-	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-	if (!success)
-	{
-		glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
-	}
-	// Link shaders
-	GLuint shaderProgram = glCreateProgram();
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragmentShader);
-	glLinkProgram(shaderProgram);
-	// Check for linking errors
-	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-	if (!success) {
-		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-	}
-	glDeleteShader(vertexShader); //free up memory
-	glDeleteShader(fragmentShader);
-
-	glUseProgram(shaderProgram);
+	ShaderProgram* shaderProgram = new ShaderProgram("vertex.shader", "fragment.shader");
+	shaderProgram->Run();
 
 	// Object 1
 	GLuint VAO_axis;
@@ -471,12 +338,11 @@ int main()
 	glBindVertexArray(0);				// Unbind VAO
 
 	// Set initial values
-	GLuint projectionLoc = glGetUniformLocation(shaderProgram, "projection_matrix");
-	GLuint viewMatrixLoc = glGetUniformLocation(shaderProgram, "view_matrix");
-	GLuint transformLoc = glGetUniformLocation(shaderProgram, "model_matrix");
+	GLuint projectionLoc = glGetUniformLocation(shaderProgram->id(), "projection_matrix");
+	GLuint viewMatrixLoc = glGetUniformLocation(shaderProgram->id(), "view_matrix");
+	GLuint transformLoc = glGetUniformLocation(shaderProgram->id(), "model_matrix");
 
 	axisTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-	//glm::mat4 gridLocalTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-(GLfloat)heightImage / 2.0f, 0.0f, -(GLfloat)widthImage / 2.0f));
 
 	// Position the transforms of the objects
 	defaults();

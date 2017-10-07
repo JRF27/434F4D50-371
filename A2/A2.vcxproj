@@ -119,12 +119,16 @@
   <ItemGroup>
     <ClInclude Include="CImg.h" />
     <ClInclude Include="HeightMapManager.hpp" />
+    <ClInclude Include="Shader.hpp" />
+    <ClInclude Include="ShaderProgram.hpp" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="HeightMapManager.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="ShaderProgram.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

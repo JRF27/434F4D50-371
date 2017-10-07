@@ -8,6 +8,12 @@
     <ClCompile Include="HeightMapManager.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="Shader.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="ShaderProgram.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -16,6 +22,12 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="CImg.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Shader.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderProgram.hpp">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>
