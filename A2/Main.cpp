@@ -14,6 +14,7 @@
 
 #include "HeightMapManager.hpp"
 #include "ShaderProgram.hpp"
+#include "Axis.hpp"
 
 using namespace std;
 
@@ -25,7 +26,6 @@ typedef double float64;
 const GLuint WIDTH = 800;
 const GLuint HEIGHT = 800;
 
-const int AXIS_LENGTH = 4;
 const GLfloat SCALE_FACTOR = 0.05f;
 const glm::vec3 ORIGIN(0.0f, 0.0f, 0.0f);
 const glm::vec3 UP(0.0f, 1.0f, 0.0f);
@@ -264,7 +264,7 @@ int init()
 void resetCamera()
 {
 	cameraPosition = glm::vec3(600.0, 0.0f, 600.0f);
-	cameraTarget = glm::vec3(0.0f, 100.0f, 0.0f);
+	cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f); //glm::vec3(0.0f, 100.0f, 0.0f);
 	cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 }
 
@@ -299,27 +299,8 @@ int main()
 	projection_matrix = glm::perspective(45.0f, (GLfloat) width / (GLfloat) height, 0.1f, 500.0f);
 
 	ShaderProgram* shaderProgram = new ShaderProgram("vertex.shader", "fragment.shader");
+	ShaderProgram* shaderProgramAxis = new ShaderProgram("vertexAxis.shader", "fragment.shader");
 	shaderProgram->Run();
-
-	// Object 1
-	GLuint VAO_axis;
-	GLuint verticesAxis_VBO;
-	std::vector<glm::vec3> axisPts;
-	axisPts.push_back(glm::vec3(0, 0, 0));
-	axisPts.push_back(glm::vec3(AXIS_LENGTH, 0, 0));
-	axisPts.push_back(glm::vec3(0, 0, 0));
-	axisPts.push_back(glm::vec3(0, AXIS_LENGTH, 0));
-	axisPts.push_back(glm::vec3(0, 0, 0));
-	axisPts.push_back(glm::vec3(0, 0, AXIS_LENGTH));
-
-	glGenVertexArrays(1, &VAO_axis);		// Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
-	glGenBuffers(1, &verticesAxis_VBO);		//
-
-	glBindVertexArray(VAO_axis);
-	glBindBuffer(GL_ARRAY_BUFFER, verticesAxis_VBO);
-	glBufferData(GL_ARRAY_BUFFER, axisPts.size() * sizeof(glm::vec3), &axisPts.front(), GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-	glEnableVertexAttribArray(0);
 
 	// Object 2
 	GLuint VAO_points;
@@ -342,6 +323,10 @@ int main()
 	GLuint viewMatrixLoc = glGetUniformLocation(shaderProgram->id(), "view_matrix");
 	GLuint transformLoc = glGetUniformLocation(shaderProgram->id(), "model_matrix");
 
+	GLuint projectionLocAxis = glGetUniformLocation(shaderProgramAxis->id(), "projection_matrix");
+	GLuint viewMatrixLocAxis = glGetUniformLocation(shaderProgramAxis->id(), "view_matrix");
+	GLuint transformLocAxis = glGetUniformLocation(shaderProgramAxis->id(), "model_matrix");
+
 	axisTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 
 	// Position the transforms of the objects
@@ -357,6 +342,9 @@ int main()
 	float64 delta = 0;
 	float64 currentTime = 0;
 
+	// Objects
+	Axis* axis = new Axis(100);
+
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();					// Check if any events have been activiated (key pressed, mouse moved etc.) and call corresponding response functions
 
@@ -371,19 +359,19 @@ int main()
 		view_matrix = glm::lookAt(cameraPosition, cameraTarget, cameraUp);
 		model_matrix = glm::mat4(1.0f);
 
-		glBindVertexArray(VAO_axis);
-		model_matrix = axisTransform;
-		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(model_matrix));
-		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
-		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
-		glDrawArrays(GL_LINES, 0, axisPts.size());
+		shaderProgramAxis->Run();
+		axis->render();
+		glUniformMatrix4fv(transformLocAxis, 1, GL_FALSE, glm::value_ptr(model_matrix));
+		glUniformMatrix4fv(viewMatrixLocAxis, 1, GL_FALSE, glm::value_ptr(view_matrix));
+		glUniformMatrix4fv(projectionLocAxis, 1, GL_FALSE, glm::value_ptr(projection_matrix));
 
+		shaderProgram->Run();
 		glBindVertexArray(VAO_points);
 		model_matrix = axisTransform;
 		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(model_matrix));
 		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
 		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
-		glDrawArrays(GL_LINES, 0, allPoints.size());
+		glDrawArrays(GL_POINTS, 0, allPoints.size());
 
 		glBindVertexArray(0);
 

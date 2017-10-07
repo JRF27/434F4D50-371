@@ -13,6 +13,11 @@ const float STEPMIN = 0.1f;
 const float STEPMAX = 0.8f;
 const float STEPDEFAULT = 0.1f;
 
+/*
+	Source - load with Cimg				http://cimg.eu/reference/group__cimg__tutorial.html
+	Source - read the color with CImg	https://stackoverflow.com/questions/3291923/how-to-get-rgb-value-by-cimg
+*/
+
 HeightMapManager::HeightMapManager():
 	m_skipSize(SKIPDEFAULT),
 	m_stepSize(STEPDEFAULT)

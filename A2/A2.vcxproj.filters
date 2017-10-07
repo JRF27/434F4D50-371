@@ -14,6 +14,9 @@
     <ClCompile Include="ShaderProgram.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="Axis.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -28,6 +31,9 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="ShaderProgram.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Axis.hpp">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>
@@ -47,6 +53,9 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="vertex.shader">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="vertexAxis.shader">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
