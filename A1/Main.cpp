@@ -10,8 +10,7 @@
 #include "glm.hpp"
 #include "gtc/matrix_transform.hpp"
 #include "gtc/type_ptr.hpp"
-
-#include "objloader.hpp"					// include the object loader
+#include <vector>
 
 using namespace std;
 
