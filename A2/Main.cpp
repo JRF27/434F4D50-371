@@ -39,13 +39,13 @@ glm::vec3 cameraUp;
 glm::mat4 projection_matrix;
 glm::mat4 view_matrix;
 
-// Transforms
-glm::mat4 axisTransform;
-
+// Mouse
 glm::vec2 lastMousePoint = glm::vec2(WIDTH / 2, HEIGHT / 2);
 bool cameraZoomingEnabled = false;
 bool cameraPanningEnabled = false;
 bool cameraTiltingEnabled = false;
+
+// Window
 GLFWwindow* window;
 
 // Function prototypes
@@ -263,8 +263,8 @@ int init()
 
 void resetCamera()
 {
-	cameraPosition = glm::vec3(600.0, 0.0f, 600.0f);
-	cameraTarget = glm::vec3(0.0f, 100.0f, 0.0f); //glm::vec3(0.0f, 100.0f, 0.0f);
+	cameraPosition = glm::vec3(-100.0f, 200.0f, -100.0f);
+	cameraTarget = glm::vec3(200, 200.0f, 200);
 	cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 }
 
@@ -293,28 +293,32 @@ int main()
 	glfwGetFramebufferSize(window, &width, &height);
 
 	glViewport(0, 0, width, height);
-	projection_matrix = glm::perspective(45.0f, (GLfloat) width / (GLfloat) height, 0.1f, 500.0f);
+	projection_matrix = glm::perspective(45.0f, (GLfloat) width / (GLfloat) height, 0.1f, 1000.0f);
 
-	ShaderProgram* shaderProgram = new ShaderProgram("vertex.shader", "fragment.shader");
+	ShaderProgram* shaderProgramHM = new ShaderProgram("vertex.shader", "fragment.shader");
 	ShaderProgram* shaderProgramAxis = new ShaderProgram("vertexAxis.shader", "fragment.shader");
-	shaderProgram->Run();
+	shaderProgramHM->Run();
 
 	// Set Unifroms
-	GLuint projectionLoc = glGetUniformLocation(shaderProgram->id(), "projection_matrix");
-	GLuint viewMatrixLoc = glGetUniformLocation(shaderProgram->id(), "view_matrix");
-	GLuint transformLoc = glGetUniformLocation(shaderProgram->id(), "model_matrix");
+	GLuint projectionLoc = glGetUniformLocation(shaderProgramHM->id(), "projection_matrix");
+	GLuint viewMatrixLoc = glGetUniformLocation(shaderProgramHM->id(), "view_matrix");
+	GLuint transformLoc = glGetUniformLocation(shaderProgramHM->id(), "model_matrix");
 
 	GLuint projectionLocAxis = glGetUniformLocation(shaderProgramAxis->id(), "projection_matrix");
 	GLuint viewMatrixLocAxis = glGetUniformLocation(shaderProgramAxis->id(), "view_matrix");
 	GLuint transformLocAxis = glGetUniformLocation(shaderProgramAxis->id(), "model_matrix");
 
-	axisTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+	
 
 	// Position the transforms of the objects
 	defaults();
 
 	// Temp objects
 	glm::mat4 model_matrix;
+
+	// Matrices / Vectors
+	glm::mat4 axisTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+	glm::vec3 heightMapScale = glm::vec3(0.5f, 0.5f, 0.5f);
 
 	// FPS
 	uint32 frames = 0;
@@ -347,8 +351,9 @@ int main()
 		glUniformMatrix4fv(projectionLocAxis, 1, GL_FALSE, glm::value_ptr(projection_matrix));
 		axis->render();
 
-		shaderProgram->Run();
-		model_matrix = axisTransform;
+		shaderProgramHM->Run();
+		model_matrix = glm::mat4(1.0f);
+		model_matrix = glm::scale(model_matrix, heightMapScale);
 		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(model_matrix));
 		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
 		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
