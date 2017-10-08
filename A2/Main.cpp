@@ -264,7 +264,7 @@ int init()
 void resetCamera()
 {
 	cameraPosition = glm::vec3(600.0, 0.0f, 600.0f);
-	cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f); //glm::vec3(0.0f, 100.0f, 0.0f);
+	cameraTarget = glm::vec3(0.0f, 100.0f, 0.0f); //glm::vec3(0.0f, 100.0f, 0.0f);
 	cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 }
 
@@ -279,12 +279,9 @@ int main()
 	HeightMapManager* heightMapManager = new HeightMapManager();
 	std::string fileName = "depth.bmp";
 	heightMapManager->readImage(fileName);
-	heightMapManager->readSkipSize();
-	heightMapManager->readStepSize();
+	//heightMapManager->readSkipSize();
+	//heightMapManager->readStepSize();
 	heightMapManager->createAllpoints();
-
-	std::vector<glm::vec3> allPoints = heightMapManager->getAllPoints();
-	std::vector<glm::vec3> subPoints;
 
 	if (init() == 1)
 	{
@@ -302,23 +299,7 @@ int main()
 	ShaderProgram* shaderProgramAxis = new ShaderProgram("vertexAxis.shader", "fragment.shader");
 	shaderProgram->Run();
 
-	// Object 2
-	GLuint VAO_points;
-	GLuint verticesPoints_VBO;
-
-	glGenVertexArrays(1, &VAO_points);		// Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
-	glGenBuffers(1, &verticesPoints_VBO);		//
-
-	glBindVertexArray(VAO_points);
-	glBindBuffer(GL_ARRAY_BUFFER, verticesPoints_VBO);
-	glBufferData(GL_ARRAY_BUFFER, allPoints.size() * sizeof(glm::vec3), &allPoints.front(), GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-	glEnableVertexAttribArray(0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);	// Unbind VBO
-	glBindVertexArray(0);				// Unbind VAO
-
-	// Set initial values
+	// Set Unifroms
 	GLuint projectionLoc = glGetUniformLocation(shaderProgram->id(), "projection_matrix");
 	GLuint viewMatrixLoc = glGetUniformLocation(shaderProgram->id(), "view_matrix");
 	GLuint transformLoc = glGetUniformLocation(shaderProgram->id(), "model_matrix");
@@ -333,7 +314,6 @@ int main()
 	defaults();
 
 	// Temp objects
-	glm::mat4 model_matrixLocal;
 	glm::mat4 model_matrix;
 
 	// FPS
@@ -342,13 +322,14 @@ int main()
 	float64 delta = 0;
 	float64 currentTime = 0;
 
-	// Objects
+	// Load Objects
 	Axis* axis = new Axis(100);
+	axis->loadData();
+	heightMapManager->loadData();
 
 	while (!glfwWindowShouldClose(window)) {
-		glfwPollEvents();					// Check if any events have been activiated (key pressed, mouse moved etc.) and call corresponding response functions
-
-		currentTime = glfwGetTime();		//
+		glfwPollEvents();
+		currentTime = glfwGetTime();
 
 		// Update Logic
 
@@ -360,20 +341,18 @@ int main()
 		model_matrix = glm::mat4(1.0f);
 
 		shaderProgramAxis->Run();
-		axis->render();
+		model_matrix = axisTransform;
 		glUniformMatrix4fv(transformLocAxis, 1, GL_FALSE, glm::value_ptr(model_matrix));
 		glUniformMatrix4fv(viewMatrixLocAxis, 1, GL_FALSE, glm::value_ptr(view_matrix));
 		glUniformMatrix4fv(projectionLocAxis, 1, GL_FALSE, glm::value_ptr(projection_matrix));
+		axis->render();
 
 		shaderProgram->Run();
-		glBindVertexArray(VAO_points);
 		model_matrix = axisTransform;
 		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(model_matrix));
 		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
 		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
-		glDrawArrays(GL_POINTS, 0, allPoints.size());
-
-		glBindVertexArray(0);
+		heightMapManager->render();
 
 		glfwSwapBuffers(window);
 
@@ -389,6 +368,8 @@ int main()
 			frames++;
 		}
 	}
+
+	// Destroy objects...
 
 	// Terminate GLFW, clearing any resources allocated by GLFW.
 	glfwTerminate();

@@ -18,6 +18,8 @@ public:
 	void readStepSize();
 	void readImage(std::string& fileName);
 	void createAllpoints();
+	void loadData();
+	void render();
 
 private:
 	void setSkipSize(int& skipSize) { m_skipSize = skipSize; };
@@ -29,6 +31,10 @@ private:
 	cimg_library::CImg<unsigned char> m_image;
 	int m_image_width;
 	int m_image_height;
+
+	GLuint VAO;
+	GLuint VBO;
+	GLuint EBO;
 
 	glm::vec3 m_v3_triangleScale;
 	std::vector<glm::vec3> m_allPoints;

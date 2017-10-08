@@ -3,6 +3,8 @@
 #include <cstring>
 #include <iostream>
 
+#include "..\glew\glew.h" // include GL Extension Wrangler
+
 #include "HeightMapManager.hpp"
 
 const int SKIPMIN = 2;
@@ -88,4 +90,23 @@ void HeightMapManager::createAllpoints()
 				m_subPoints.push_back(m_allPoints.back());
 		}
 	}
+}
+
+void HeightMapManager::loadData()
+{
+	glGenVertexArrays(1, &VAO);			// Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
+	glGenBuffers(1, &VBO);				//
+
+	glBindVertexArray(VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, m_allPoints.size() * sizeof(glm::vec3), &m_allPoints.front(), GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(0);
+}
+
+void HeightMapManager::render()
+{
+	glBindVertexArray(VAO);
+	glDrawArrays(GL_POINTS, 0, m_allPoints.size());
+	glBindVertexArray(0);
 }

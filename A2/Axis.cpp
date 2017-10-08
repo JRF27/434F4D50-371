@@ -7,12 +7,17 @@
 
 Axis::Axis(const int axisLength)
 {
+	m_axisLength = axisLength;
+}
+
+void Axis::loadData()
+{
 	axisPts.push_back(glm::vec3(0, 0, 0));
-	axisPts.push_back(glm::vec3(axisLength, 0, 0));
+	axisPts.push_back(glm::vec3(m_axisLength, 0, 0));
 	axisPts.push_back(glm::vec3(0, 0, 0));
-	axisPts.push_back(glm::vec3(0, axisLength, 0));
+	axisPts.push_back(glm::vec3(0, m_axisLength, 0));
 	axisPts.push_back(glm::vec3(0, 0, 0));
-	axisPts.push_back(glm::vec3(0, 0, axisLength));
+	axisPts.push_back(glm::vec3(0, 0, m_axisLength));
 
 	glGenVertexArrays(1, &VAO);		// Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
 	glGenBuffers(1, &VBO);			//
