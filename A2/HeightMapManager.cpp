@@ -74,15 +74,15 @@ void HeightMapManager::createAllpoints()
 	static bool isGrayScale = true;
 	for (int x = 0; x < m_image_height; x++)
 	{
-		for (int y = 0; y < m_image_width; y++)
+		for (int z = 0; z < m_image_width; z++)
 		{
 			// Point Cloud
-			glm::vec3 currentColor = glm::vec3((int)m_image(x, y, 0, 0), (int)m_image(x, y, 0, 1), (int)m_image(x, y, 0, 2));
-			//cout << "(" << x << "," << y << ") =" << " R" << (int)src(y, x, 0, 0) << " G" << (int)src(y, x, 0, 1) << " B" << (int)src(y, x, 0, 2) << endl;
+			glm::vec3 currentColor = glm::vec3((int)m_image(x, z, 0, 0), (int)m_image(x, z, 0, 1), (int)m_image(x, z, 0, 2));
+			//cout << "(" << x << "," << z << ") =" << " R" << (int)src(z, x, 0, 0) << " G" << (int)src(z, x, 0, 1) << " B" << (int)src(z, x, 0, 2) << endl;
 			if (isGrayScale)
-				m_allPoints.push_back(glm::vec3(x, currentColor.x, y));
+				m_allPoints.push_back(glm::vec3(x, currentColor.x, z));
 			else
-				m_allPoints.push_back(glm::vec3(x, glm::length(currentColor), y));
+				m_allPoints.push_back(glm::vec3(x, glm::length(currentColor), z));
 
 			// Subset of points
 			if (x % m_skipSize == 0)
