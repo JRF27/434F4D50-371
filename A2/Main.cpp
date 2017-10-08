@@ -307,12 +307,7 @@ int main()
 	GLuint projectionLocAxis = glGetUniformLocation(shaderProgramAxis->id(), "projection_matrix");
 	GLuint viewMatrixLocAxis = glGetUniformLocation(shaderProgramAxis->id(), "view_matrix");
 	GLuint transformLocAxis = glGetUniformLocation(shaderProgramAxis->id(), "model_matrix");
-
 	
-
-	// Position the transforms of the objects
-	defaults();
-
 	// Temp objects
 	glm::mat4 model_matrix;
 
@@ -325,6 +320,9 @@ int main()
 	float64 counter = 0;
 	float64 delta = 0;
 	float64 currentTime = 0;
+
+	// Set Camera
+	defaults();
 
 	// Load Objects
 	Axis* axis = new Axis(100);

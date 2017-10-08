@@ -24,7 +24,6 @@ HeightMapManager::HeightMapManager():
 	m_skipSize(SKIPDEFAULT),
 	m_stepSize(STEPDEFAULT)
 {
-
 }
 
 HeightMapManager::~HeightMapManager()
@@ -73,23 +72,24 @@ void HeightMapManager::readImage(std::string& fileName)
 void HeightMapManager::createAllpoints()
 {
 	static bool isGrayScale = true;
-	for (int r = 0; r < m_image_height; r++)
+	for (int x = 0; x < m_image_height; x++)
 	{
-		for (int c = 0; c < m_image_width; c++)
+		for (int y = 0; y < m_image_width; y++)
 		{
 			// Point Cloud
-			glm::vec3 currentColor = glm::vec3((int)m_image(c, r, 0, 0), (int)m_image(c, r, 0, 1), (int)m_image(c, r, 0, 2));
-			//cout << "(" << r << "," << c << ") =" << " R" << (int)src(c, r, 0, 0) << " G" << (int)src(c, r, 0, 1) << " B" << (int)src(c, r, 0, 2) << endl;
+			glm::vec3 currentColor = glm::vec3((int)m_image(x, y, 0, 0), (int)m_image(x, y, 0, 1), (int)m_image(x, y, 0, 2));
+			//cout << "(" << x << "," << y << ") =" << " R" << (int)src(y, x, 0, 0) << " G" << (int)src(y, x, 0, 1) << " B" << (int)src(y, x, 0, 2) << endl;
 			if (isGrayScale)
-				m_allPoints.push_back(glm::vec3(r, currentColor.x, c));
+				m_allPoints.push_back(glm::vec3(x, currentColor.x, y));
 			else
-				m_allPoints.push_back(glm::vec3(r, glm::length(currentColor), c));
+				m_allPoints.push_back(glm::vec3(x, glm::length(currentColor), y));
 
 			// Subset of points
-			if (c % m_skipSize == 0)
+			if (x % m_skipSize == 0)
 				m_subPoints.push_back(m_allPoints.back());
 		}
 	}
+	//m_allPoints = m_subPoints; // testing
 }
 
 void HeightMapManager::loadData()
