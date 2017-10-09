@@ -21,9 +21,13 @@ public:
 	void loadData();
 	void render();
 
+	void executeCatmullRom();
+
 private:
 	void setSkipSize(int& skipSize) { m_skipSize = skipSize; };
 	void setStepSize(float& stepSize) { m_stepSize = stepSize; };
+
+	void catmullRom(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3);
 
 	int m_skipSize;
 	float m_stepSize;

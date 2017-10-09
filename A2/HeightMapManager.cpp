@@ -72,6 +72,7 @@ void HeightMapManager::readImage(std::string& fileName)
 void HeightMapManager::createAllpoints()
 {
 	static bool isGrayScale = true;
+	int numberXpoints = 0;
 	for (int x = 0; x < m_image_height; x++)
 	{
 		for (int z = 0; z < m_image_width; z++)
@@ -86,10 +87,16 @@ void HeightMapManager::createAllpoints()
 
 			// Subset of points
 			if (x % m_skipSize == 0)
+			{
 				m_subPoints.push_back(m_allPoints.back());
+			}
 		}
+		if(x % m_skipSize == 0)
+			numberXpoints++;
 	}
-	//m_allPoints = m_subPoints; // testing
+
+	//catmullRom(m_allPoints.at(0), m_allPoints.at(1), m_allPoints.at(2), m_allPoints.at(3));
+	//catmullRom(m_allPoints.at(1), m_allPoints.at(2), m_allPoints.at(3), m_allPoints.at(4));
 }
 
 void HeightMapManager::loadData()
@@ -109,4 +116,39 @@ void HeightMapManager::render()
 	glBindVertexArray(VAO);
 	glDrawArrays(GL_POINTS, 0, m_allPoints.size());
 	glBindVertexArray(0);
+}
+
+void HeightMapManager::executeCatmullRom()
+{
+
+}
+
+void HeightMapManager::catmullRom(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3)
+{
+	static float s = 0.5f;
+
+	glm::mat4 basis = glm::mat4(-s, (2 * s), -s, 0,
+								2 - s, s - 3, 0, 1,
+								s - 2, 3 - (2 * s), s, 0,
+								s, -s, 0, 0);
+
+	glm::mat3x4 ctrl = glm::transpose(glm::mat4x3(p0, p1, p2, p3));
+
+	float u = m_stepSize;
+
+	glm::vec4 uv = glm::vec4(glm::pow(u, 3), glm::pow(u, 2), u, 1);
+
+	glm::vec3 pt = uv * basis * ctrl;
+
+	std::vector<glm::vec3> addedPoints;
+
+	float count = 0.0f;
+	do {
+		count += u;
+		glm::vec4 uv = glm::vec4(glm::pow(count, 3), glm::pow(count, 2), count, 1);
+		glm::vec3 pt = uv * basis * ctrl;
+		addedPoints.push_back(pt);
+	} while (count + 0.1f < 1.0f);
+
+	m_allPoints.insert(m_allPoints.end(), addedPoints.begin(), addedPoints.end());
 }
