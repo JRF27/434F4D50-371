@@ -282,6 +282,7 @@ int main()
 	//heightMapManager->readSkipSize();
 	//heightMapManager->readStepSize();
 	heightMapManager->createAllpoints();
+	heightMapManager->createSubpoints();
 
 	if (init() == 1)
 	{

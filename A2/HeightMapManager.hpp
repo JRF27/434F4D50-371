@@ -18,6 +18,7 @@ public:
 	void readStepSize();
 	void readImage(std::string& fileName);
 	void createAllpoints();
+	void createSubpoints();
 	void loadData();
 	void render();
 

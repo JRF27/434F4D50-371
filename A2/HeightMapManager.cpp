@@ -72,28 +72,33 @@ void HeightMapManager::readImage(std::string& fileName)
 void HeightMapManager::createAllpoints()
 {
 	static bool isGrayScale = true;
-	int numberXpoints = 0;
-	for (int x = 0; x < m_image_height; x++)
-	{
-		for (int z = 0; z < m_image_width; z++)
-		{
-			// Point Cloud
-			glm::vec3 currentColor = glm::vec3((int)m_image(x, z, 0, 0), (int)m_image(x, z, 0, 1), (int)m_image(x, z, 0, 2));
-			//cout << "(" << x << "," << z << ") =" << " R" << (int)src(z, x, 0, 0) << " G" << (int)src(z, x, 0, 1) << " B" << (int)src(z, x, 0, 2) << endl;
-			if (isGrayScale)
-				m_allPoints.push_back(glm::vec3(x, currentColor.x, z));
-			else
-				m_allPoints.push_back(glm::vec3(x, glm::length(currentColor), z));
 
-			// Subset of points
-			if (x % m_skipSize == 0)
-			{
-				m_subPoints.push_back(m_allPoints.back());
-			}
-		}
-		if(x % m_skipSize == 0)
-			numberXpoints++;
+	int sizeX = m_image_height;
+	int sizeZ = m_image_width;
+
+	for(int i = 0; i < (sizeX * sizeZ); i++)
+	{
+		int x = int(i % sizeX);
+		int z = int(i / sizeZ);
+		int y = isGrayScale ? (int)m_image(x, z, 0, 0) : glm::length(glm::vec3((int)m_image(x, z, 0, 0), (int)m_image(x, z, 0, 1), (int)m_image(x, z, 0, 2)));
+		m_allPoints.push_back(glm::vec3(x, y, z));
 	}
+}
+
+void HeightMapManager::createSubpoints()
+{
+	int sizeX = m_image_height;
+	int sizeZ = m_image_width;
+
+	for (int i = 0; i < (sizeX * sizeZ); i++)
+	{
+		int x = int(i % sizeX);
+		int z = int(i / sizeZ);
+		if(x % m_skipSize == 0)
+			m_subPoints.push_back(m_allPoints.at(i));
+	}
+
+	m_allPoints = m_subPoints;
 
 	//catmullRom(m_allPoints.at(0), m_allPoints.at(1), m_allPoints.at(2), m_allPoints.at(3));
 	//catmullRom(m_allPoints.at(1), m_allPoints.at(2), m_allPoints.at(3), m_allPoints.at(4));
