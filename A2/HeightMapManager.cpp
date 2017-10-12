@@ -94,14 +94,9 @@ void HeightMapManager::createSubpoints()
 	{
 		int x = int(i % sizeX);
 		int z = int(i / sizeZ);
-		if(x % m_skipSize == 0)
+		if(x % m_skipSize == 0 && z % m_skipSize == 0)
 			m_subPoints.push_back(m_allPoints.at(i));
 	}
-
-	m_allPoints = m_subPoints;
-
-	//catmullRom(m_allPoints.at(0), m_allPoints.at(1), m_allPoints.at(2), m_allPoints.at(3));
-	//catmullRom(m_allPoints.at(1), m_allPoints.at(2), m_allPoints.at(3), m_allPoints.at(4));
 }
 
 void HeightMapManager::loadData()
