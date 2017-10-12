@@ -90,6 +90,9 @@ void HeightMapManager::createSubpoints()
 	int sizeX = m_image_height;
 	int sizeZ = m_image_width;
 
+	m_catmull_width = std::floor(m_image_width / m_skipSize);
+	m_catmull_height = std::floor(m_image_height / m_skipSize);
+
 	for (int i = 0; i < (sizeX * sizeZ); i++)
 	{
 		int x = int(i % sizeX);
@@ -120,7 +123,19 @@ void HeightMapManager::render()
 
 void HeightMapManager::executeCatmullRom()
 {
+	int sizeX = m_catmull_height;
+	int sizeZ = m_catmull_width;
 
+	for (int z = 0; z <= sizeZ; z++)
+	{
+		int offset = (z * (sizeX + 1));
+		for (int x = 1; x < sizeX - 1; x++)
+		{
+			catmullRom(m_subPoints.at((x - 1)+ offset), m_subPoints.at((x)+offset), m_subPoints.at((x+1)+ offset), m_subPoints.at((x+2)+ offset));
+		}
+	}
+
+	m_allPoints = m_subPoints;
 }
 
 void HeightMapManager::catmullRom(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3)
@@ -150,5 +165,5 @@ void HeightMapManager::catmullRom(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm:
 		addedPoints.push_back(pt);
 	} while (count + 0.1f < 1.0f);
 
-	m_allPoints.insert(m_allPoints.end(), addedPoints.begin(), addedPoints.end());
+	m_subPoints.insert(m_subPoints.end(), addedPoints.begin(), addedPoints.end());
 }

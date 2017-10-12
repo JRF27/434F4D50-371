@@ -37,6 +37,9 @@ private:
 	int m_image_width;
 	int m_image_height;
 
+	int m_catmull_width;
+	int m_catmull_height;
+
 	GLuint VAO;
 	GLuint VBO;
 	GLuint EBO;

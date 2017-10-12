@@ -283,6 +283,7 @@ int main()
 	//heightMapManager->readStepSize();
 	heightMapManager->createAllpoints();
 	heightMapManager->createSubpoints();
+	heightMapManager->executeCatmullRom();
 
 	if (init() == 1)
 	{
