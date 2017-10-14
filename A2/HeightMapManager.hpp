@@ -22,6 +22,7 @@ public:
 	void loadData();
 	void render();
 	void renderEBO();
+	void cycleIndex();
 
 	void executeCatmullRom();
 
@@ -43,9 +44,9 @@ private:
 
 	GLuint VAO;
 	GLuint VBO;
-	GLuint EBO;
+	GLuint EBO[2];
 
-	std::vector<unsigned int>* index;
+	int m_EBO_Index;
 
 	std::vector<unsigned int> m_indicesAll;
 	std::vector<unsigned int> m_indicesSub;

@@ -28,6 +28,7 @@ const GLuint WIDTH = 800;
 const GLuint HEIGHT = 800;
 
 // Globals
+HeightMapManager* heightMapManager;
 Camera* camera;
 bool cameraCtrlEnabled = false;
 glm::vec2 lastMousePoint = glm::vec2(WIDTH / 2, HEIGHT / 2);
@@ -71,6 +72,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		case GLFW_KEY_E:
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			break;
+		case GLFW_KEY_Z:
+			heightMapManager->cycleIndex();
 		case GLFW_KEY_ESCAPE:
 			toggleMouse = !toggleMouse;
 			toggleMouse ? glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL) : glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -195,7 +198,7 @@ int init()
 
 int main()
 {
-	HeightMapManager* heightMapManager = new HeightMapManager();
+	heightMapManager = new HeightMapManager();
 	std::string fileName = "depth.bmp";
 	heightMapManager->readImage(fileName);
 	//heightMapManager->readSkipSize();

@@ -22,7 +22,8 @@ const float STEPDEFAULT = 0.1f;
 
 HeightMapManager::HeightMapManager():
 	m_skipSize(SKIPDEFAULT),
-	m_stepSize(STEPDEFAULT)
+	m_stepSize(STEPDEFAULT),
+	m_EBO_Index(0)
 {
 }
 
@@ -112,13 +113,16 @@ void HeightMapManager::loadData()
 {
 	glGenVertexArrays(1, &VAO);			// Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
 	glGenBuffers(1, &VBO);				//
-	glGenBuffers(1, &EBO);				//
+	glGenBuffers(2, &EBO[0]);				//
 
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, m_allPoints.size() * sizeof(glm::vec3), &m_allPoints.front(), GL_STATIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indicesAll.size() * sizeof(unsigned int), &m_indicesAll.front(), GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[1]);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indicesSub.size() * sizeof(unsigned int), &m_indicesSub.front(), GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(0);
 }
@@ -133,10 +137,24 @@ void HeightMapManager::render()
 void HeightMapManager::renderEBO()
 {
 	glBindVertexArray(VAO);
-	glDrawElements(GL_POINTS, m_indicesAll.size(), GL_UNSIGNED_INT, 0);
+	switch (m_EBO_Index)
+	{
+		case(0):
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[m_EBO_Index]);
+			glDrawElements(GL_POINTS, m_indicesAll.size(), GL_UNSIGNED_INT, 0);
+			break;
+		case(1):
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[m_EBO_Index]);
+			glDrawElements(GL_POINTS, m_indicesSub.size(), GL_UNSIGNED_INT, 0);
+			break;
+	}
 	glBindVertexArray(0);
 }
 
+void HeightMapManager::cycleIndex()
+{
+	m_EBO_Index = ++m_EBO_Index % (sizeof(EBO) / sizeof(EBO[0]));
+}
 
 void HeightMapManager::executeCatmullRom()
 {
