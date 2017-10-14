@@ -15,6 +15,7 @@
 #include "HeightMapManager.hpp"
 #include "ShaderProgram.hpp"
 #include "Axis.hpp"
+#include "Camera.hpp"
 
 using namespace std;
 
@@ -26,30 +27,17 @@ typedef double float64;
 const GLuint WIDTH = 800;
 const GLuint HEIGHT = 800;
 
-const GLfloat SCALE_FACTOR = 0.05f;
-const glm::vec3 ORIGIN(0.0f, 0.0f, 0.0f);
-const glm::vec3 UP(0.0f, 1.0f, 0.0f);
-
 // Globals
-glm::vec3 cameraPosition;
-glm::vec3 cameraTarget;
-glm::vec3 cameraUp;
+Camera* camera;
+bool cameraCtrlEnabled = false;
+glm::vec2 lastMousePoint = glm::vec2(WIDTH / 2, HEIGHT / 2);
 
 // Recipe: projection_matrix * view_matrix * model_matrix
 glm::mat4 projection_matrix;
 glm::mat4 view_matrix;
 
-// Mouse
-glm::vec2 lastMousePoint = glm::vec2(WIDTH / 2, HEIGHT / 2);
-bool cameraZoomingEnabled = false;
-bool cameraPanningEnabled = false;
-bool cameraTiltingEnabled = false;
-
 // Window
 GLFWwindow* window;
-
-// Function prototypes
-void resetCamera();
 
 /**
 	This is called whenever a key is pressed/released via GLFW.
@@ -66,40 +54,33 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		switch (key)
 		{
 		case GLFW_KEY_A:
-			std::cout << "Move Left." << std::endl;
-			cameraPosition += glm::vec3(0.0f,0.0f,-2.0f);
+			camera->moveLeft();
 			break;
 		case GLFW_KEY_D:
-			std::cout << "Move Right." << std::endl;
-			cameraPosition += glm::vec3(0.0f, 0.0f, 2.0f);
+			camera->moveRight();
 			break;
 		case GLFW_KEY_W:
-			std::cout << "Move Forard." << std::endl;
-			cameraPosition += glm::vec3(2.0f, 0.0f, 0.0f);
+			camera->moveForward();
 			break;
 		case GLFW_KEY_S:
-			std::cout << "Move Backward." << std::endl;
-			cameraPosition += glm::vec3(-2.0f, 0.0f, 0.0f);
+			camera->moveBackward();
 			break;
-		case GLFW_KEY_P:
-			std::cout << "Rendered as Points." << std::endl;
+		case GLFW_KEY_Q:
 			glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
 			break;
-		case GLFW_KEY_L:
-			std::cout << "Rendered as Lines." << std::endl;
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-			break;
-		case GLFW_KEY_T:
-			std::cout << "Rendered as Triangles." << std::endl;
+		case GLFW_KEY_E:
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			break;
 		case GLFW_KEY_ESCAPE:
-			std::cout << "Escape pressed." << std::endl;
 			toggleMouse = !toggleMouse;
 			toggleMouse ? glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL) : glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 			break;
+		case GLFW_KEY_BACKSPACE:
+			camera->reset();
+			// ask for skip size
+			// restart accordingly
+			break;
 		default:
-			//std::cout << "Unimplemented key #" << key << "pressed." << std::endl;
 			break;
 		}
 	}
@@ -107,12 +88,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 /**
 	This is called whenever the window has been resized via GLFW.
-
-	Source: 
 */
 void window_resize_callback(GLFWwindow *_window, int width, int height)
 {
-	std::cout << "Resized! " << width << "x" << height << "." << std::endl;
 	glViewport(0, 0, width, height);
 	projection_matrix = glm::perspective(45.0f, (GLfloat)width / (GLfloat)height, 0.1f, 100.0f);
 }
@@ -141,33 +119,9 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	lastMousePoint.x = xpos;
 	lastMousePoint.y = ypos;
 
-	if (cameraPanningEnabled)
+	if (cameraCtrlEnabled)
 	{
-		cameraPosition += glm::vec3(xoffset * SCALE_FACTOR, 0.0f, 0.0f);
-		cameraTarget += glm::vec3(xoffset * SCALE_FACTOR, 0.0f, 0.0f);
-		//std::cout << "Camera at (" << cameraPosition.x << "," << cameraPosition.y << "," << cameraPosition.z << ")" << std::endl;
-		//std::cout << "Target at (" << cameraTarget.x << "," << cameraTarget.y << "," << cameraTarget.z << ")" << std::endl;
-	}
-
-	if (cameraZoomingEnabled)
-	{
-		cameraPosition += cameraPosition *(yoffset * SCALE_FACTOR);
-		//std::cout << "Camera at (" << cameraPosition.x << "," << cameraPosition.y << "," << cameraPosition.z << ")" << std::endl;
-	}
-
-	if (cameraTiltingEnabled)
-	{
-		if (yoffset < 0)
-		{
-			glm::mat4 mat = glm::rotate(glm::mat4(1.0f), 0.05f, glm::vec3(1.0, 0.0, 0.0));
-			cameraPosition = glm::vec3(mat * glm::vec4(cameraPosition, 1.0));
-		}
-		else
-		{
-			glm::mat4 mat = glm::rotate(glm::mat4(1.0f), -0.05f, glm::vec3(1.0, 0.0, 0.0));
-			cameraPosition = glm::vec3(mat * glm::vec4(cameraPosition, 1.0));
-		}
-		//std::cout << "Camera at (" << cameraPosition.x << "," << cameraPosition.y << "," << cameraPosition.z << ")" << std::endl;
+		camera->moveMouse(xoffset, yoffset);
 	}
 }
 
@@ -178,33 +132,11 @@ void mouse_button_callback(GLFWwindow *_window, int button, int action, int mods
 {
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
 	{
-		std::cout << "Left Mouse pressed." << std::endl;
-		cameraZoomingEnabled = true;
+		cameraCtrlEnabled = true;
 	}
 	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
 	{
-		std::cout << "Left Mouse released." << std::endl;
-		cameraZoomingEnabled = false;
-	}
-	else if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS)
-	{
-		std::cout << "Middle Mouse pressed." << std::endl;
-		cameraTiltingEnabled = true;
-	}
-	else if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_RELEASE)
-	{
-		std::cout << "Middle Mouse released." << std::endl;
-		cameraTiltingEnabled = false;
-	}
-	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
-	{
-		std::cout << "Right Mouse pressed." << std::endl;
-		cameraPanningEnabled = true;
-	}
-	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
-	{
-		std::cout << "Right Mouse released." << std::endl;
-		cameraPanningEnabled = false;
+		cameraCtrlEnabled = false;
 	}
 }
 
@@ -261,19 +193,6 @@ int init()
 	return 1;
 }
 
-void resetCamera()
-{
-	cameraPosition = glm::vec3(-100.0f, 200.0f, -100.0f);
-	cameraTarget = glm::vec3(200, 200.0f, 200);
-	cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-}
-
-void defaults()
-{
-	// Camera Defaults
-	resetCamera();
-}
-
 int main()
 {
 	HeightMapManager* heightMapManager = new HeightMapManager();
@@ -324,7 +243,7 @@ int main()
 	float64 currentTime = 0;
 
 	// Set Camera
-	defaults();
+	camera = new Camera(glm::vec3(0.0f, 300.0f, 0.0f));
 
 	// Load Objects
 	Axis* axis = new Axis(100);
@@ -341,7 +260,7 @@ int main()
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-		view_matrix = glm::lookAt(cameraPosition, cameraTarget, cameraUp);
+		view_matrix = camera->getViewMatrix();
 		model_matrix = glm::mat4(1.0f);
 
 		shaderProgramAxis->Run();
