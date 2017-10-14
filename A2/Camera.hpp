@@ -13,7 +13,7 @@ class Camera {
 
 public:
 	Camera();
-	Camera(glm::vec3 position);
+	Camera(glm::vec3 position, float pitch, float yaw);
 	~Camera();
 
 	void setHomePosition(glm::vec3 home) { m_home_position = home; };
@@ -32,6 +32,9 @@ private:
 	void update();
 
 	glm::vec3 m_home_position;
+	float m_home_pitch;
+	float m_home_yaw;
+
 	glm::vec3 m_position;
 	glm::vec3 m_worldUp;
 

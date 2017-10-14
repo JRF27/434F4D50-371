@@ -243,7 +243,7 @@ int main()
 	float64 currentTime = 0;
 
 	// Set Camera
-	camera = new Camera(glm::vec3(0.0f, 300.0f, 0.0f));
+	camera = new Camera(glm::vec3(0.0f, 200.0f, 0.0f), 0.0, 45.0f);
 
 	// Load Objects
 	Axis* axis = new Axis(100);

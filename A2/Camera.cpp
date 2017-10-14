@@ -7,19 +7,22 @@
 
 #include "Camera.hpp"
 
-Camera::Camera() : Camera(glm::vec3(0.0f))
+Camera::Camera() : Camera(glm::vec3(0.0f), 0.0f, 0.0f)
 {
 }
 
-Camera::Camera(glm::vec3 position)
+Camera::Camera(glm::vec3 position, float pitch, float yaw)
 {
 	m_home_position = position;
+	m_home_pitch = pitch;
+	m_home_yaw = yaw;
+
 	m_position = position;
 	m_up = glm::vec3(0.0f, 1.0f, 0.0f);
 	m_worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
-	m_yaw = 45.0f;
-	m_pitch = 0.0f;
+	m_pitch = pitch;
+	m_yaw = yaw;
 	m_rate = 3.0f;
 
 	update();
@@ -65,6 +68,9 @@ void Camera::reset()
 {
 	m_position = m_home_position;
 	m_up = m_worldUp;
+
+	m_pitch = m_home_pitch;
+	m_yaw = m_home_yaw;
 
 	update();
 }
