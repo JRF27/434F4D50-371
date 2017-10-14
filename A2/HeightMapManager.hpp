@@ -21,6 +21,7 @@ public:
 	void createSubpoints();
 	void loadData();
 	void render();
+	void renderEBO();
 
 	void executeCatmullRom();
 
@@ -43,6 +44,11 @@ private:
 	GLuint VAO;
 	GLuint VBO;
 	GLuint EBO;
+
+	std::vector<unsigned int>* index;
+
+	std::vector<unsigned int> m_indicesAll;
+	std::vector<unsigned int> m_indicesSub;
 
 	glm::vec3 m_v3_triangleScale;
 	std::vector<glm::vec3> m_allPoints;

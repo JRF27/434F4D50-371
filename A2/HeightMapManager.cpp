@@ -82,6 +82,7 @@ void HeightMapManager::createAllpoints()
 		int z = int(i / sizeZ);
 		int y = isGrayScale ? (int)m_image(x, z, 0, 0) : glm::length(glm::vec3((int)m_image(x, z, 0, 0), (int)m_image(x, z, 0, 1), (int)m_image(x, z, 0, 2)));
 		m_allPoints.push_back(glm::vec3(x, y, z));
+		m_indicesAll.push_back(i);
 	}
 }
 
@@ -97,19 +98,27 @@ void HeightMapManager::createSubpoints()
 	{
 		int x = int(i % sizeX);
 		int z = int(i / sizeZ);
-		if(x % m_skipSize == 0 && z % m_skipSize == 0)
+		if (x % m_skipSize == 0 && z % m_skipSize == 0)
+		{
 			m_subPoints.push_back(m_allPoints.at(i));
+			m_indicesSub.push_back(i);
+		}
 	}
+
+	//m_indicesAll = m_indicesSub;
 }
 
 void HeightMapManager::loadData()
 {
 	glGenVertexArrays(1, &VAO);			// Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
 	glGenBuffers(1, &VBO);				//
+	glGenBuffers(1, &EBO);				//
 
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, m_allPoints.size() * sizeof(glm::vec3), &m_allPoints.front(), GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indicesAll.size() * sizeof(unsigned int), &m_indicesAll.front(), GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(0);
 }
@@ -120,6 +129,14 @@ void HeightMapManager::render()
 	glDrawArrays(GL_POINTS, 0, m_allPoints.size());
 	glBindVertexArray(0);
 }
+
+void HeightMapManager::renderEBO()
+{
+	glBindVertexArray(VAO);
+	glDrawElements(GL_POINTS, m_indicesAll.size(), GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
+}
+
 
 void HeightMapManager::executeCatmullRom()
 {
@@ -134,8 +151,6 @@ void HeightMapManager::executeCatmullRom()
 			catmullRom(m_subPoints.at((x - 1)+ offset), m_subPoints.at((x)+offset), m_subPoints.at((x+1)+ offset), m_subPoints.at((x+2)+ offset));
 		}
 	}
-
-	m_allPoints = m_subPoints;
 }
 
 void HeightMapManager::catmullRom(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3)
