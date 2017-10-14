@@ -218,7 +218,6 @@ int main()
 
 	ShaderProgram* shaderProgramHM = new ShaderProgram("vertex.shader", "fragment.shader");
 	ShaderProgram* shaderProgramAxis = new ShaderProgram("vertexAxis.shader", "fragment.shader");
-	shaderProgramHM->Run();
 
 	// Set Unifroms
 	GLuint projectionLoc = glGetUniformLocation(shaderProgramHM->id(), "projection_matrix");
@@ -261,7 +260,6 @@ int main()
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
 		view_matrix = camera->getViewMatrix();
-		model_matrix = glm::mat4(1.0f);
 
 		shaderProgramAxis->Run();
 		model_matrix = axisTransform;
@@ -271,7 +269,7 @@ int main()
 		axis->render();
 
 		shaderProgramHM->Run();
-		model_matrix = glm::mat4(1.0f);
+		model_matrix = axisTransform;
 		model_matrix = glm::scale(model_matrix, heightMapScale);
 		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(model_matrix));
 		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
