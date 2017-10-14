@@ -161,17 +161,29 @@ void HeightMapManager::executeCatmullRom()
 	int sizeX = m_catmull_height;
 	int sizeZ = m_catmull_width;
 
+	std::vector<glm::vec3> newPoints;
+
 	for (int z = 0; z <= sizeZ; z++)
 	{
 		int offset = (z * (sizeX + 1));
+
+		std::vector<glm::vec3> ip = linearInterpolation(m_subPoints.at(offset), m_subPoints.at(offset + 1));
+		newPoints.insert(newPoints.end(), ip.begin(), ip.end());
+
 		for (int x = 1; x < sizeX - 1; x++)
 		{
-			catmullRom(m_subPoints.at((x - 1)+ offset), m_subPoints.at((x)+offset), m_subPoints.at((x+1)+ offset), m_subPoints.at((x+2)+ offset));
+			newPoints.push_back(m_subPoints.at((x - 1) + offset));
+			std::vector<glm::vec3> cmr = catmullRom(m_subPoints.at((x - 1)+ offset), m_subPoints.at((x)+offset), m_subPoints.at((x+1)+ offset), m_subPoints.at((x+2)+ offset));
+			newPoints.insert(newPoints.end(), cmr.begin(), cmr.end());
 		}
+
+		newPoints.push_back(m_subPoints.at((z + 1) * sizeX));
 	}
+	
+	m_allPoints = newPoints;
 }
 
-void HeightMapManager::catmullRom(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3)
+std::vector<glm::vec3> HeightMapManager::catmullRom(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3)
 {
 	static float s = 0.5f;
 
@@ -198,5 +210,20 @@ void HeightMapManager::catmullRom(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm:
 		addedPoints.push_back(pt);
 	} while (count + 0.1f < 1.0f);
 
-	m_subPoints.insert(m_subPoints.end(), addedPoints.begin(), addedPoints.end());
+	return addedPoints;
+}
+
+std::vector<glm::vec3> HeightMapManager::linearInterpolation(glm::vec3 p0, glm::vec3 p1)
+{
+	float u = m_stepSize;
+	
+	std::vector<glm::vec3> addedPoints;
+
+	float count = 0.0f;
+	do {
+		count += u;
+		addedPoints.push_back((1 - count)* p0 + count * p1);
+	} while (count + 0.1f < 1.0f);
+
+	return addedPoints;
 }

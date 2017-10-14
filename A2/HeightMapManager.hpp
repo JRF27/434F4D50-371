@@ -30,7 +30,8 @@ private:
 	void setSkipSize(int& skipSize) { m_skipSize = skipSize; };
 	void setStepSize(float& stepSize) { m_stepSize = stepSize; };
 
-	void catmullRom(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3);
+	std::vector<glm::vec3> catmullRom(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3);
+	std::vector<glm::vec3> linearInterpolation(glm::vec3 p0, glm::vec3 p1);
 
 	int m_skipSize;
 	float m_stepSize;
@@ -55,5 +56,4 @@ private:
 	std::vector<glm::vec3> m_allPoints;
 	std::vector<glm::vec3> m_subPoints;
 };
-
 #endif
