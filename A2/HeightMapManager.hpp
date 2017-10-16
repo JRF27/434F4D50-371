@@ -21,6 +21,7 @@ public:
 	void render();
 	void renderEBO();
 	void cycleIndex();
+	void cycleRenderMode();
 	void renderOriginalEBO();
 
 private:
@@ -50,6 +51,8 @@ private:
 
 	int m_catmull_width;
 	int m_catmull_height;
+
+	GLuint m_render_type;
 
 	GLuint VAO;
 	GLuint VBO;

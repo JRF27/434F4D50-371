@@ -23,7 +23,8 @@ const float STEPDEFAULT = 0.1f;
 HeightMapManager::HeightMapManager():
 	m_skipSize(SKIPDEFAULT),
 	m_stepSize(STEPDEFAULT),
-	m_EBO_Index(0)
+	m_EBO_Index(0),
+	m_render_type(GL_POINTS)
 {
 }
 
@@ -99,15 +100,15 @@ void HeightMapManager::renderEBO()
 	{
 		case(0):
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[m_EBO_Index]);
-			glDrawElements(GL_POINTS, m_indicesAll.size(), GL_UNSIGNED_INT, 0);
+			glDrawElements(m_render_type, m_indicesAll.size(), GL_UNSIGNED_INT, 0);
 			break;
 		case(1):
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[m_EBO_Index]);
-			glDrawElements(GL_POINTS, m_indicesSub.size(), GL_UNSIGNED_INT, 0);
+			glDrawElements(m_render_type, m_indicesSub.size(), GL_UNSIGNED_INT, 0);
 			break;
 		case(2):
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[m_EBO_Index]);
-			glDrawElements(GL_POINTS, m_indicesCatX.size(), GL_UNSIGNED_INT, 0);
+			glDrawElements(m_render_type, m_indicesCatX.size(), GL_UNSIGNED_INT, 0);
 			break;
 	}
 	glBindVertexArray(0);
@@ -116,13 +117,24 @@ void HeightMapManager::renderOriginalEBO()
 {
 	glBindVertexArray(VAOo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOo);
-	glDrawElements(GL_POINTS, m_originalIndices.size(), GL_UNSIGNED_INT, 0);
+	glDrawElements(m_render_type, m_originalIndices.size(), GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
 }
 
 void HeightMapManager::cycleIndex()
 {
 	m_EBO_Index = ++m_EBO_Index % (sizeof(EBO) / sizeof(EBO[0]));
+}
+
+void HeightMapManager::cycleRenderMode()
+{
+	static bool cycle = false;
+
+	cycle = !cycle;
+	if (cycle)
+		m_render_type = GL_TRIANGLES;
+	else
+		m_render_type = GL_POINTS;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////

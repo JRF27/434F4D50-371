@@ -82,6 +82,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		case GLFW_KEY_X:
 			renderOriginal = !renderOriginal;
 			break;
+		case GLFW_KEY_C:
+			heightMapManager->cycleRenderMode();
+			break;
 		case GLFW_KEY_ESCAPE:
 			toggleMouse = !toggleMouse;
 			toggleMouse ? glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL) : glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);

@@ -15,6 +15,7 @@ ESC		toggle the cursor visibily
 BACKSPACE	reset the camera and the HeightMapManager
 Z		cycle between points indices of the HeightMapManager's EBO
 X		toggle between original points and new points.
+C		cycle render mode (triangles or points)
 W, A, S, D	controls the camera, left, down and right respectively
 
 MOUSE LEFT	enable camera movement when held down
