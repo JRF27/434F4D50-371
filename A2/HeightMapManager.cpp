@@ -158,28 +158,43 @@ void HeightMapManager::cycleIndex()
 
 void HeightMapManager::executeCatmullRom()
 {
-	int sizeX = m_catmull_height;
-	int sizeZ = m_catmull_width;
-
 	std::vector<glm::vec3> newPoints;
-
-	for (int z = 0; z <= sizeZ; z++)
+	for (int col = 0; col < m_catmull_width; col++)
 	{
-		int offset = (z * (sizeX + 1));
+		int offset = ( m_catmull_height + 1) * col;
 
-		std::vector<glm::vec3> ip = linearInterpolation(m_subPoints.at(offset), m_subPoints.at(offset + 1));
-		newPoints.insert(newPoints.end(), ip.begin(), ip.end());
-
-		for (int x = 1; x < sizeX - 1; x++)
+		for (int i = 0; i < m_catmull_height; i++)
 		{
-			newPoints.push_back(m_subPoints.at((x - 1) + offset));
-			std::vector<glm::vec3> cmr = catmullRom(m_subPoints.at((x - 1)+ offset), m_subPoints.at((x)+offset), m_subPoints.at((x+1)+ offset), m_subPoints.at((x+2)+ offset));
-			newPoints.insert(newPoints.end(), cmr.begin(), cmr.end());
-		}
+			// first point
+			if (i == 0)
+			{
+				newPoints.push_back(m_subPoints.at(i + offset));
+				std::vector<glm::vec3> lp = linearInterpolation(m_subPoints.at(i + offset), m_subPoints.at(i + 1 + offset));
+				newPoints.insert(newPoints.end(), lp.begin(), lp.end());
+				newPoints.push_back(m_subPoints.at(i + 1 + offset));
+				continue;
+			}
 
-		newPoints.push_back(m_subPoints.at((z + 1) * sizeX));
+			// last point
+			else if (i == m_catmull_height - 1)
+			{
+				newPoints.push_back(m_subPoints.at(i + offset));
+				std::vector<glm::vec3> lp = linearInterpolation(m_subPoints.at(i + offset), m_subPoints.at(i + 1 + offset));
+				newPoints.insert(newPoints.end(), lp.begin(), lp.end());
+				newPoints.push_back(m_subPoints.at(i + 1 + offset));
+				break;
+			}
+			
+			// cmr points
+			else
+			{
+				newPoints.push_back(m_subPoints.at(i + offset));
+				std::vector<glm::vec3> cmr = catmullRom(m_subPoints.at(i - 1 + offset), m_subPoints.at(i + offset), m_subPoints.at(i + 1 + offset), m_subPoints.at(i + 2 + offset));
+				newPoints.insert(newPoints.end(), cmr.begin(), cmr.end());
+			}
+		}
 	}
-	
+
 	m_allPoints = newPoints;
 }
 
