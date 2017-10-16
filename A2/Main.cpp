@@ -31,6 +31,7 @@ const GLuint HEIGHT = 800;
 HeightMapManager* heightMapManager;
 Camera* camera;
 bool cameraCtrlEnabled = false;
+bool renderOriginal = false;
 glm::vec2 lastMousePoint = glm::vec2(WIDTH / 2, HEIGHT / 2);
 
 // Recipe: projection_matrix * view_matrix * model_matrix
@@ -73,7 +74,13 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			break;
 		case GLFW_KEY_Z:
-			heightMapManager->cycleIndex();
+			if (renderOriginal)
+				std::cout << "Rendering original! Will not change modality." << std::endl;
+			else
+				heightMapManager->cycleIndex();
+			break;
+		case GLFW_KEY_X:
+			renderOriginal = !renderOriginal;
 			break;
 		case GLFW_KEY_ESCAPE:
 			toggleMouse = !toggleMouse;
@@ -202,11 +209,7 @@ int main()
 	heightMapManager = new HeightMapManager();
 	std::string fileName = "depth.bmp";
 	heightMapManager->readImage(fileName);
-	//heightMapManager->readSkipSize();
-	//heightMapManager->readStepSize();
-	heightMapManager->createAllpoints();
-	heightMapManager->createSubpoints();
-	heightMapManager->executeCatmullRom();
+	heightMapManager->start();
 
 	if (init() == 1)
 	{
@@ -278,7 +281,11 @@ int main()
 		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(model_matrix));
 		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
 		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
-		heightMapManager->renderEBO();
+		
+		if(renderOriginal)
+			heightMapManager->renderOriginalEBO();
+		else
+			heightMapManager->renderEBO();
 
 		glfwSwapBuffers(window);
 

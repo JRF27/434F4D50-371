@@ -12,26 +12,34 @@ public:
 
 	int getSkipSize()						{ return m_skipSize; };
 	float getStepSize()						{ return m_stepSize; };
-	std::vector<glm::vec3> getAllPoints()	{ return m_allPoints; };
 
-	void readSkipSize();
-	void readStepSize();
 	void readImage(std::string& fileName);
-	void createAllpoints();
-	void createSubpoints();
+
+	void start();
+
 	void loadData();
 	void render();
 	void renderEBO();
 	void cycleIndex();
-
-	void executeCatmullRom();
+	void renderOriginalEBO();
 
 private:
 	void setSkipSize(int& skipSize) { m_skipSize = skipSize; };
 	void setStepSize(float& stepSize) { m_stepSize = stepSize; };
 
+	void generateOriginalPoints();
+	void generateSubPoints();
+
+	void generateAllIndices();
+
+	void executeCatmullRomX();
+	void executeCatmullRomZ();
+
 	std::vector<glm::vec3> catmullRom(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3);
 	std::vector<glm::vec3> linearInterpolation(glm::vec3 p0, glm::vec3 p1);
+
+	void readSkipSize();
+	void readStepSize();
 
 	int m_skipSize;
 	float m_stepSize;
@@ -45,15 +53,22 @@ private:
 
 	GLuint VAO;
 	GLuint VBO;
-	GLuint EBO[2];
+	GLuint EBO[3];
 
 	int m_EBO_Index;
 
 	std::vector<unsigned int> m_indicesAll;
+	std::vector<unsigned int> m_indicesCatX;
 	std::vector<unsigned int> m_indicesSub;
 
-	glm::vec3 m_v3_triangleScale;
-	std::vector<glm::vec3> m_allPoints;
-	std::vector<glm::vec3> m_subPoints;
+	std::vector<glm::vec3> m_catmullromPoints;
+
+	// Second Buffer
+	GLuint VAOo;
+	GLuint VBOo;
+	GLuint EBOo;
+
+	std::vector<unsigned int> m_originalIndices;
+	std::vector<glm::vec3> m_originalPoints;
 };
 #endif
