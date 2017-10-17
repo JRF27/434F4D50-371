@@ -43,13 +43,42 @@ void HeightMapManager::readImage(std::string& fileName)
 
 void HeightMapManager::start()
 {
-	//readSkipSize();
-	//readStepSize();
+	readSkipSize();
+	readStepSize();
 	generateOriginalPoints();
 	generateSubPoints();
 	executeCatmullRomX();
 	executeCatmullRomZ();
 	generateAllIndices();
+}
+
+void HeightMapManager::restart()
+{
+	readSkipSize();
+	readStepSize();
+
+	// starting values
+	m_EBO_Index = 0;
+	m_render_type = GL_POINTS;
+
+	// clear
+	m_catmullromPoints.clear();
+	
+	// generate
+	generateSubPoints();
+	executeCatmullRomX();
+	executeCatmullRomZ();
+
+	// clear
+	m_indicesAll.clear();
+	m_indicesCatX.clear();
+	m_indicesSub.clear();
+
+	// generate
+	generateAllIndices();
+
+	// load
+	loadData();
 }
 
 void HeightMapManager::loadData()

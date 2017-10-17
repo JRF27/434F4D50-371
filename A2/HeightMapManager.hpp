@@ -16,6 +16,7 @@ public:
 	void readImage(std::string& fileName);
 
 	void start();
+	void restart();
 
 	void loadData();
 	void render();

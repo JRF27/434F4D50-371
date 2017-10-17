@@ -91,8 +91,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			break;
 		case GLFW_KEY_BACKSPACE:
 			camera->reset();
-			// ask for skip size
-			// restart accordingly
+			heightMapManager->restart();
+			renderOriginal = false;
 			break;
 		default:
 			break;
