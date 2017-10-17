@@ -11,8 +11,8 @@ const int SKIPMIN = 2;
 const int SKIPMAX = 100;
 const int SKIPDEFAULT = 20;
 
-const float STEPMIN = 0.05f;
-const float STEPMAX = 0.8f;
+const float STEPMIN = 0.1f;
+const float STEPMAX = 0.5f;
 const float STEPDEFAULT = 0.1f;
 
 /*
