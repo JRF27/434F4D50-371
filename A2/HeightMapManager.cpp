@@ -155,9 +155,6 @@ void HeightMapManager::generateOriginalPoints()
 		int y = isGrayScale ? (int)m_image(x, z, 0, 0) : glm::length(glm::vec3((int)m_image(x, z, 0, 0), (int)m_image(x, z, 0, 1), (int)m_image(x, z, 0, 2)));
 		m_originalPoints.push_back(glm::vec3(x, y, z));
 		m_originalIndices.push_back(i);
-		// fix
-		//m_allPoints.push_back(glm::vec3(x, y, z));
-		//m_indicesAll.push_back(i);
 	}
 }
 

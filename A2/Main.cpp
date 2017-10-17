@@ -106,7 +106,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 void window_resize_callback(GLFWwindow *_window, int width, int height)
 {
 	glViewport(0, 0, width, height);
-	projection_matrix = glm::perspective(45.0f, (GLfloat)width / (GLfloat)height, 0.1f, 100.0f);
+	projection_matrix = glm::perspective(45.0f, (GLfloat)width / (GLfloat)height, 0.1f, 1000.0f);
 }
 
 /**
