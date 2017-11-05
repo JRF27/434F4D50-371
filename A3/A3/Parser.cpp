@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <cstring>
 
-bool Parser::parseSceneText(const char * fileLocation)//, std::vector<std::string> & names)
+bool Parser::parseSceneText(const char * fileLocation, const Scene& scene)
 {
 	FILE * file = fopen(fileLocation, "r");
 	if (file == NULL)
