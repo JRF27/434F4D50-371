@@ -1,7 +1,7 @@
 #pragma once
 #include <iostream>
 
-#include "../../glm/glm.hpp"
+#include "../glm/glm.hpp"
 
 struct Camera {
 	Camera() {}
