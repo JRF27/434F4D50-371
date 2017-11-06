@@ -54,6 +54,27 @@ private:
 	float m_specular_shininess;
 };
 
+struct Plane {
+	Plane(const glm::vec3& n, const glm::vec3& p, glm::vec3& ac, const glm::vec3& dc, const glm::vec3& sc, const float& ss)
+		: m_normal(n)
+		, m_position(p)
+		, m_ambient_color(ac)
+		, m_diffuse_color(dc)
+		, m_specular_color(sc)
+		, m_specular_shininess(ss)
+	{}
+
+	~Plane() {}
+
+private:
+	glm::vec3 m_normal;
+	glm::vec3 m_position;
+	glm::vec3 m_ambient_color;
+	glm::vec3 m_diffuse_color;
+	glm::vec3 m_specular_color;
+	float m_specular_shininess;
+};
+
 struct Model {
 	Model(const std::string& n, const glm::vec3& ac, const glm::vec3& dc, const glm::vec3& sc, const float& ss)
 		: m_name(n)

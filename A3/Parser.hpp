@@ -6,6 +6,6 @@
 
 class Parser {
 public:
-	static bool parseSceneText(const char * path, const Scene& scene);
+	static bool parseSceneText(int& num, const char * path, Scene& scene);
 };
 #endif PARSER_H

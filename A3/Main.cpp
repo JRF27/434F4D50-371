@@ -19,12 +19,15 @@ void writeColor(const int& x, const int& y, cimg_library::CImg<float>& image, co
 int main()
 {
 	Scene scene;
+	int num;
 
 	std::string file = "sceneOBJ";
-	Parser::parseSceneText(std::string(file).append(TXT).c_str(), scene);
+	Parser::parseSceneText(num, std::string(file).append(TXT).c_str(), scene);
 
 	// Creates an image with three channels and sets it to black
 	cimg_library::CImg<float> image(WIDTH, HEIGHT, 1, 3, 0);
+
+	int c = scene.getNumberOfObjects();
 
 
 	//Save the image in BMP format.
