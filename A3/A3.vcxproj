@@ -136,11 +136,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Objects.cpp" />
+    <ClCompile Include="objloader.cpp" />
     <ClCompile Include="Parser.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CImg.h" />
     <ClInclude Include="Objects.h" />
+    <ClInclude Include="objloader.hpp" />
     <ClInclude Include="Parser.hpp" />
     <ClInclude Include="Scene.hpp" />
   </ItemGroup>

@@ -51,7 +51,7 @@ bool Parser::parseSceneText(int& num, const char * fileLocation, Scene& scene)
 			getline(file, line);
 			sscanf_s(line.c_str(), "col: %f %f %f", &c.x, &c.y, &c.z);
 
-			scene.addLight(Light(p, c));
+			scene.addLight(new Light(p, c));
 		}
 		else if (line == "model")
 		{
@@ -73,6 +73,10 @@ bool Parser::parseSceneText(int& num, const char * fileLocation, Scene& scene)
 
 			getline(file, line);
 			sscanf_s(line.c_str(), "shi: %f", &ss);
+
+			// using the name, load the object
+			// create triangles
+
 
 			scene.addModel(Model(n, ac, dc, sc, ss));
 		}
@@ -100,7 +104,7 @@ bool Parser::parseSceneText(int& num, const char * fileLocation, Scene& scene)
 			getline(file, line);
 			sscanf_s(line.c_str(), "shi: %f", &ss);
 
-			scene.addSphere(Sphere(p,  r,  ac, dc, sc, ss));
+			scene.addPrimitive(new Sphere(p,  r,  ac, dc, sc, ss));
 		}
 		else if (line == "plane")
 		{
@@ -125,7 +129,36 @@ bool Parser::parseSceneText(int& num, const char * fileLocation, Scene& scene)
 			getline(file, line);
 			sscanf_s(line.c_str(), "shi: %f", &ss);
 
-			scene.addPlane(Plane(n, p, ac, dc, sc, ss));
+			scene.addPrimitive(new Plane(n, p, ac, dc, sc, ss));
+		}
+		else if (line == "triangle")
+		{
+			glm::vec3 v1, v2, v3;
+			glm::vec3 ac, dc, sc;
+			float ss;
+
+			getline(file, line);
+			sscanf_s(line.c_str(), "v1: %f %f %f", &v1.x, &v1.y, &v1.z);
+
+			getline(file, line);
+			sscanf_s(line.c_str(), "v2: %f %f %f", &v2.x, &v2.y, &v2.z);
+
+			getline(file, line);
+			sscanf_s(line.c_str(), "v3: %f %f %f", &v3.x, &v3.y, &v3.z);
+
+			getline(file, line);
+			sscanf_s(line.c_str(), "amb: %f %f %f", &ac.x, &ac.y, &ac.z);
+
+			getline(file, line);
+			sscanf_s(line.c_str(), "dif: %f %f %f", &dc.x, &dc.y, &dc.z);
+
+			getline(file, line);
+			sscanf_s(line.c_str(), "spe: %f %f %f", &sc.x, &sc.y, &sc.z);
+
+			getline(file, line);
+			sscanf_s(line.c_str(), "shi: %f", &ss);
+
+			scene.addPrimitive(new Triangle(v1, v2, v3, ac, dc, sc, ss));
 		}
 	}
 
