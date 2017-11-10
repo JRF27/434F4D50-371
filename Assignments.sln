@@ -7,7 +7,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "A1", "A1\A1.vcxproj", "{A8D
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "A2", "A2\A2.vcxproj", "{4F4927BD-69E2-4BB1-9EE0-5A36D164DAFC}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "A3", "A3\A3\A3.vcxproj", "{0F33EA2C-CB1E-4EB2-B4CC-A971EC749226}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "A3", "A3\A3.vcxproj", "{0F33EA2C-CB1E-4EB2-B4CC-A971EC749226}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

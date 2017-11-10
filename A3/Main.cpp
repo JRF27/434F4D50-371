@@ -96,7 +96,6 @@ void setupCamera()
 									-focalLength);
 
 	WIDTH = (topRight.x - topLeft.x);
-
 	HEIGHT = (topLeft.y - bottomLeft.y);
 
 	// Origin of the rays
@@ -115,7 +114,7 @@ glm::vec3 rayTrace(glm::vec3& rayO, glm::vec3& rayD)
 	std::vector<Primitive*> primitives = scene.getPrimitives();
 	std::vector<Light*> lights = scene.getLights();
 
-	float distance;						// stores a calculated distance
+	float distance;						// stores the calculated distance
 	float currentDistance = 100000;		// closest distance found
 	int closestIndex = -1;				// index of that distance
 

@@ -1,30 +1,22 @@
 .........................................................................................................
-	Assignment 2
+	Assignment 3
 .........................................................................................................
 
 .........................................................................................................
 	To run:
 .........................................................................................................
 - Open sln with Visual Studio 2015
-- Startup solution should be A2
+- Startup solution should be A3
 - Start debugging
+- In Main.cpp std::string file = "sceneOBJ" defines the text file that will be loaded, the render will
+  be saved with the same name in the '.bmp' format.
 
 .........................................................................................................
 	Controls:
 .........................................................................................................
-ESC		toggle the cursor visibily
-BACKSPACE	reset the camera and the HeightMapManager
-Z		cycle between points indices of the HeightMapManager's EBO (sub points, catmullrom x, and smooth)
-X		toggle between original points and new points.
-C*		cycle render mode (triangles or points)
-W, A, S, D	controls the camera, left, down and right respectively
-
-MOUSE LEFT	enable camera movement when held down
-
-
-* sadly not functional...
+- N/A
 
 .........................................................................................................
 	Extra Credit Implementation:
 .........................................................................................................
-- HeightMapManager has another VAO with an EBO that contains all the points provided by the image.
+- N/A
