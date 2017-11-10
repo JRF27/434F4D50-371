@@ -75,7 +75,7 @@ glm::vec3 Plane::getNormal(const glm::vec3& point)
 }
 
 /*
-* Source: https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-plane-and-ray-disk-intersection
+* Source: Edward Angle book page 567
 */
 bool Plane::intersect(glm::vec3& origin, glm::vec3& direction, float& distance)
 {
