@@ -1,4 +1,5 @@
 #include "Parser.hpp"
+#include "objloader.hpp"
 
 #include <iostream>
 #pragma warning (disable : 4996)
@@ -74,11 +75,21 @@ bool Parser::parseSceneText(int& num, const char * fileLocation, Scene& scene)
 			getline(file, line);
 			sscanf_s(line.c_str(), "shi: %f", &ss);
 
-			// using the name, load the object
-			// create triangles
+			
+			std::vector<glm::vec3> vertices;
+			std::vector<glm::vec3> normals;
+			std::vector<glm::vec2> UVs;
 
+			// Read the data from the .obj file
+			loadOBJ(n.c_str(), vertices, normals, UVs);
+			int c = vertices.size() / 3;
+			scene.addModel(new Model(n, c, ac, dc, sc, ss));
 
-			scene.addModel(Model(n, ac, dc, sc, ss));
+			for (int i = 0; i < vertices.size(); i += 3)
+			{
+				glm::vec3 v1(vertices.at(i)), v2(vertices.at(i + 1)), v3(vertices.at(i + 2));
+				scene.addPrimitive(new Triangle(v1, v2, v3, ac, dc, sc, ss));
+			}
 		}
 		else if (line == "sphere")
 		{

@@ -3,6 +3,8 @@
 
 #include "../glm/glm.hpp"
 
+static bool QuadtraticFormula(const float& a, const float& b, const float& c, float& sol1, float& sol2);
+
 struct Camera {
 	Camera() {}
 
@@ -105,8 +107,9 @@ private:
 	Should contain triangles defined by each triangle in the model...
 */
 struct Model {
-	Model(const std::string& n, const glm::vec3& ac, const glm::vec3& dc, const glm::vec3& sc, const float& ss)
+	Model(const std::string& n, const int& c, const glm::vec3& ac, const glm::vec3& dc, const glm::vec3& sc, const float& ss)
 		: m_name(n)
+		, m_triangle_count(c)
 		, m_ambient_color(ac)
 		, m_diffuse_color(dc)
 		, m_specular_color(sc)
@@ -115,8 +118,11 @@ struct Model {
 
 	~Model() {}
 
+	int getTriangleCount() { return m_triangle_count; };
+
 private:
 	std::string m_name;
+	int m_triangle_count;
 	glm::vec3 m_ambient_color;
 	glm::vec3 m_diffuse_color;
 	glm::vec3 m_specular_color;
